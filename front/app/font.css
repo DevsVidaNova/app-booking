@@ -1,0 +1,40 @@
+@font-face {
+    font-family: 'Mundial';
+    src: url('/fonts/Mundial Bold.otf') format('opentype');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Mundial';
+    src: url('/fonts/Mundial DemiBold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: 'Mundial';
+    src: url('/fonts/Mundial Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Mundial';
+    src: url('/fonts/Mundial Light.otf') format('opentype');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --font-mundial: 'Mundial', sans-serif;
+  }
+  
+  body {
+    font-family: var(--font-mundial);
+  }
+  
+  

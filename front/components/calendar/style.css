@@ -1,0 +1,19 @@
+/* Remover bordas do grid da visualização semanal e diária */
+.fc .fc-timegrid-slot,
+.fc .fc-timegrid-col {
+    border: 1px solid #10101010;
+}
+
+.fc .fc-col-header-cell {
+    border: 1px solid #10101010;
+}
+
+
+.fc-scrollgrid {
+    border-color: transparent !important;
+}
+
+.fc-timegrid-slot-label {
+  border: none !important;
+  
+}
