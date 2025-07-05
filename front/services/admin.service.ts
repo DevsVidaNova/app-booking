@@ -37,3 +37,15 @@ export const excludeUserById = async (id: string) => {
         throw new Error(error instanceof Error ? error.message : 'An unknown error occurred');
     }
 };
+
+// Alias para compatibilidade
+export const editUser = editUserById;
+
+// Função addScale
+export const addScale = async (data: any) => {
+    try {
+        return await fetchWithAuth("/scale", { method: "POST", data: data });
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'An unknown error occurred');
+    }
+};

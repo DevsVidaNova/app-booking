@@ -69,6 +69,8 @@ import {
 } from "./table"
 import { Label } from "./label";
 import { Title } from "./title";
+import { Badge } from "./badge";
+import { Textarea } from "./textarea";
 import {
     Pagination,
     PaginationContent,
@@ -96,6 +98,8 @@ import {
 export {
     Label,
     Title,
+    Badge,
+    Textarea,
     Message,
     Card,
     CardContent,

@@ -92,3 +92,6 @@ export function BookingAdd({ refetch }: BookingFormProps) {
         </Drawer>
     )
 }
+
+// Alias para compatibilidade
+export const BookingForm = BookingAdd
