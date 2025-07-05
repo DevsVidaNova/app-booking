@@ -15,7 +15,7 @@ RUN npm ci
 # Copiar todo o código e compilar
 COPY . .
 RUN npm run build
-
+RUN ls -la /app/dist
 # ==========================
 # STAGE 2: Produção
 # ==========================
