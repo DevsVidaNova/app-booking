@@ -28,7 +28,7 @@
     "lint:fix": "eslint . --ext .ts,.js --fix"
   },
   "engines": {
-    "node": ">=20.x"
+    "node": ">=18.x"
   },
   "devDependencies": {
     "@babel/core": "^7.27.7",
