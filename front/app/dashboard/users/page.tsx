@@ -62,7 +62,6 @@ const ListUsers = ({ users, refetch, setpage, page, }: { users: ListUser, refetc
 }
 
 const TableUsers = ({ users, refetch, }: { users: User[], refetch: () => void, }) => {
-  if (!users) return <p>Carregando...</p>
 
   const [confirmation, setconfirmation] = useState('');
   const [openExclude, setOpenExclude] = useState(false)
@@ -78,6 +77,8 @@ const TableUsers = ({ users, refetch, }: { users: User[], refetch: () => void, }
       console.log(error)
     }
   }
+  
+  if (!users) return <p>Carregando...</p>
 
   return (
     <Card className='overflow-hidden'>
@@ -107,7 +108,7 @@ const TableUsers = ({ users, refetch, }: { users: User[], refetch: () => void, }
                     <DialogContent className="sm:max-w-[455px]">
                       <DialogHeader>
                         <DialogTitle>Excluir usuário</DialogTitle>
-                        <DialogDescription>Tem certeza que quer excluir o usuário? Digite "sim" para confirmar</DialogDescription>
+                        <DialogDescription>Tem certeza que quer excluir o usuário? Digite sim para confirmar</DialogDescription>
                         <Input
                           id='confirmation'
                           label='Confirmação'
@@ -141,7 +142,7 @@ const TableUsers = ({ users, refetch, }: { users: User[], refetch: () => void, }
                           <DialogContent className="sm:max-w-[455px]">
                             <DialogHeader>
                               <DialogTitle>Excluir usuário</DialogTitle>
-                              <DialogDescription>Tem certeza que quer excluir o usuário? Digite "sim" para confirmar</DialogDescription>
+                              <DialogDescription>Tem certeza que quer excluir o usuário? Digite sim para confirmar</DialogDescription>
                               <Input
                                 id='confirmation'
                                 label='Confirmação'

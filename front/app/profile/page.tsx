@@ -23,7 +23,7 @@ export default function Profile() {
 
   const [success, setsuccess] = useState('');
   const [error, seterror] = useState('');
-  const { data: user, error: isError, isLoading, } = useQuery<ListUser>({
+  const { data: user, error: isError, isLoading, } = useQuery<any>({
     queryKey: ['user profile'],
     queryFn: profileUser
   });
@@ -51,10 +51,10 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
-      form.setValue('name', user.name)
-      form.setValue('phone', user.phone)
+      form.setValue('name', user?.name || '')
+      form.setValue('phone', user?.phone || '')
     }
-  }, [user])
+  }, [user, form])
 
   if (isLoading) return <p>Carregando...</p>
   if (isError) return <p>Erro ao carregar usuários</p>

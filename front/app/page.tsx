@@ -22,6 +22,7 @@ import { deleteToken } from "@/hooks/token";
 import Profile from "./dashboard/profile/page";
 
 import { useQuery } from '@tanstack/react-query'
+import Image from "next/image";
 
 export default function Home() {
   const { data: user, error: usererror, isLoading: userloading, } = useQuery({
@@ -36,7 +37,7 @@ export default function Home() {
     <div className="bg-background ">
       <div className="flex flex-row z-20  bg-[#ffffff30] backdrop-blur-xs justify-between px-4 py-2 border-b fixed w-screen">
         <div className='container mx-auto flex flex-row justify-between'>
-          <img src="/imgs/logo_black.png" alt="Vida Nova" className="w-[180px] z-20" style={{ marginLeft: -18, }} />
+          <Image src="/imgs/logo_black.png" alt="Vida Nova" className="w-[180px] z-20" style={{ marginLeft: -18, }} />
           <Drawer>
             <DrawerTrigger>
               <div className="w-[48px] h-[48px] border rounded-full flex-col flex items-center justify-center">

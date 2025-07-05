@@ -52,7 +52,7 @@ export function UserEditForm({ id, refetch, defaultValue }: { id: string, refetc
             form.setValue('email', defaultValue.email)
             form.setValue('role', defaultValue.role)
         }
-    }, [defaultValue])
+    }, [defaultValue, form])
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         seterror('')

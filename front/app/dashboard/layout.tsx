@@ -13,6 +13,7 @@ import { AlignJustify } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import BottomMenu from '@/components/menus/bottom_menu';
+import Image from 'next/image';
 
 export default function DashLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -27,7 +28,7 @@ export default function DashLayout({ children }: { children: ReactNode }) {
       }
     }
     verify();
-  }, []);
+  }, [router]);
 
   return (
     <div className='bg-background w-full flex '>
@@ -36,7 +37,7 @@ export default function DashLayout({ children }: { children: ReactNode }) {
           <Drawer>
             <div className='container justify-between items-center flex-row flex'>
               <Link href="/" className='flex flex-col '>
-                <img src="/imgs/logo_black.png" className="w-[220px] h-[60px] bg-gray self-center items-center -ml-8 " />
+                <Image alt="logo black" src="/imgs/logo_black.png" className="w-[220px] h-[60px] bg-gray self-center items-center -ml-8 " />
               </Link>
               <DrawerTrigger>
                 <div className="w-[48px] h-[48px] border rounded-full flex-col flex items-center justify-center">

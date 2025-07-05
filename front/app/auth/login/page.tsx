@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent,  } from "@/c
 import { loginUser } from '@/services/user.service'
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
+import Image from 'next/image'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -53,7 +54,7 @@ export default function Login() {
       <Card className="w-[350px] self-center border-none shadow-none">
         <CardHeader>
           <Link href="/" className='w-full items-center self-center mx-auto flex flex-col justify-center'>
-            <img src="/imgs/logo_black.png" className="w-[220px] h-[70px] bg-gray self-center items-center" />
+            <Image src="/imgs/logo_black.png" alt="logo black" className="w-[220px] h-[70px] bg-gray self-center items-center" />
           </Link>
           <CardTitle className="text-2xl hidden">Entrar</CardTitle>
           <CardDescription className='hidden'>Digite seu email e senha para acessar sua conta.</CardDescription>

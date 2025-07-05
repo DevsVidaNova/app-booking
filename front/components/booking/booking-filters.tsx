@@ -144,7 +144,7 @@ export function BookingFilters({ onFiltersChange, className = '' }: BookingFilte
             <div className="flex flex-wrap gap-2">
               {filters.search && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                  Busca: "{filters.search}"
+                  Busca: {filters.search}
                   <button
                     onClick={() => updateFilter('search', '')}
                     className="hover:bg-blue-200 rounded-full p-0.5"

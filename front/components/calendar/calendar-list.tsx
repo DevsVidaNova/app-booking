@@ -112,7 +112,11 @@ export default function CalendarList() {
   const toggleRoom = (roomId: string) => {
     setSelectedRooms(prev => {
       const newSet = new Set(prev);
-      newSet.has(roomId) ? newSet.delete(roomId) : newSet.add(roomId);
+      if (newSet.has(roomId)) {
+        newSet.delete(roomId);
+      } else {
+        newSet.add(roomId);
+      }
       return newSet;
     });
   };

@@ -56,7 +56,7 @@ export function RoomEditForm({ id, refetch, defaultValues }: { id: string, refet
             form.setValue("exclusive", defaultValues.exclusive)
             form.setValue("status", defaultValues.status)
         }
-    }, [defaultValues])
+    }, [defaultValues, form])
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         seterror('')

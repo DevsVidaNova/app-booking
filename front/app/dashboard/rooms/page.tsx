@@ -118,7 +118,7 @@ const TableRooms = ({ rooms, refetch }: { rooms: Room[]; refetch: () => void }) 
                         <DialogContent className="sm:max-w-[455px]">
                           <DialogHeader>
                             <DialogTitle>Excluir sala</DialogTitle>
-                            <DialogDescription>Tem certeza que quer excluir a sala? Digite "sim" para confirmar</DialogDescription>
+                            <DialogDescription>Tem certeza que quer excluir a sala? Digite sim para confirmar</DialogDescription>
                             <Input id="confirmation" label="Confirmação" placeholder="Leia a mensagem acima" value={confirmation} onChange={e => setconfirmation(e.target.value)} />
                           </DialogHeader>
                           <DialogFooter className="border-t-2 pt-[16px]">
@@ -150,7 +150,7 @@ const TableRooms = ({ rooms, refetch }: { rooms: Room[]; refetch: () => void }) 
                             <DialogContent className="sm:max-w-[455px]">
                               <DialogHeader>
                                 <DialogTitle>Excluir sala</DialogTitle>
-                                <DialogDescription>Tem certeza que quer excluir a sala? Digite "sim" para confirmar</DialogDescription>
+                                <DialogDescription>Tem certeza que quer excluir a sala? Digite sim para confirmar</DialogDescription>
                                 <Input id="confirmation" label="Confirmação" placeholder="Leia a mensagem acima" value={confirmation} onChange={e => setconfirmation(e.target.value)} />
                               </DialogHeader>
                               <DialogFooter className="border-t-2 pt-[16px]">

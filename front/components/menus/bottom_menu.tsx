@@ -68,7 +68,7 @@ export default function BottomMenu() {
   return (
     <div className="py-2 space-y-2">
       {items.map(item => (
-        <div className="cursor-pointer border-neutral-200 border-1 flex flex-row px-4 py-3 mx-6 rounded-lg gap-2 justify-between" onClick={() => handleNavigate(item?.path)}>
+        <div key={item?.name} className="cursor-pointer border-neutral-200 border-1 flex flex-row px-4 py-3 mx-6 rounded-lg gap-2 justify-between" onClick={() => handleNavigate(item?.path)}>
           <div className="flex flex-row gap-2">
             {item?.icon}
             <span>{item.name}</span>

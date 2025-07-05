@@ -77,7 +77,8 @@ const TimelineShow: FC<TimelineShowProps> = ({ eventData }) => {
                       ) : (
                         <div className="space-y-2">
                           {section.playlist.map((item, pIndex) => (
-                            <a
+                            <a 
+                              key={pIndex}
                               href={item.url}
                               target="_blank"
                               rel="noopener noreferrer"

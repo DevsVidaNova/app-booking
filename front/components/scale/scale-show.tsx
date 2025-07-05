@@ -16,16 +16,14 @@ import {
 
 import { useQuery } from "@tanstack/react-query";
 
-import { CalendarSearch, CalendarX2, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
-import { SingleScale } from "@/app/__api/types";
-import { confirmScale, singleScale } from "@/app/__api/scale";
+import { SingleScale } from "@/types";
+import { singleScale } from "@/services/scale.service";
 
 export function ScaleShow({ id }: { id: string }) {
   const {
-    data: scale,
-    error: errorScale,
-    isLoading,
+    data: scale
   } = useQuery<SingleScale>({
     queryKey: ["single scale", id],
     queryFn: () => singleScale(id),
@@ -73,7 +71,7 @@ export function ScaleShow({ id }: { id: string }) {
             </DrawerHeader>
             <div className="flex flex-col">
               <h2 className="text-2xl font-bold">{name}</h2>
-              <span>Direção: {direction?.name}</span>
+              <span>Direção: </span>
             </div>
             <div className="flex flex-row justify-between gap-4 my-4">
               <div className="border p-3 rounded-xl flex flex-col w-full">
