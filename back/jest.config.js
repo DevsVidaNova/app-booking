@@ -1,12 +1,19 @@
-export default {
+/** @type {import('jest').Config} */
+const config = {
   testEnvironment: 'node',
-  preset: 'ts-jest',
+  preset: 'ts-jest/presets/default-esm',
+  extensionsToTreatAsEsm: ['.ts'],
+  globals: {
+    'ts-jest': {
+      useESM: true
+    }
+  },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
-    '^(.{1,2}/.*)\\.[jt]sx?$': '$1'
+    '^(.{1,2}/.*)\.[jt]sx?$': '$1'
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$))'
+    'node_modules/(?!(.*\.mjs$))'
   ],
   collectCoverage: true,
   coverageDirectory: 'coverage',
@@ -38,3 +45,5 @@ export default {
   ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
 };
+
+module.exports = config;
