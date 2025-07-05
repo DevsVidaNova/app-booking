@@ -1,38 +1,45 @@
-# Backend Dockerfile
-FROM node:20-alpine
+# ==========================
+# STAGE 1: Build
+# ==========================
+FROM node:20-alpine AS build
 
-# Instalar curl para health checks
-RUN apk add --no-cache curl
-
-# Definir diretório de trabalho
 WORKDIR /app
 
-# Copiar package.json e package-lock.json
+# Instala curl (para usar no healthcheck futuramente)
+RUN apk add --no-cache curl
+
+# Copiar pacotes e instalar TUDO (incluindo devDependencies)
 COPY package*.json ./
+RUN npm ci
 
-# Instalar dependências
-RUN npm ci --only=production
-
-# Copiar código fonte
+# Copiar todo o código e compilar
 COPY . .
-
-# Build da aplicação
 RUN npm run build
 
-# Criar usuário não-root
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# ==========================
+# STAGE 2: Produção
+# ==========================
+FROM node:20-alpine AS production
 
-# Mudar ownership dos arquivos
+WORKDIR /app
+
+# Instala curl para o healthcheck
+RUN apk add --no-cache curl
+
+# Copia apenas os arquivos necessários do build
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/.env.prod .env.prod
+
+# Cria usuário seguro
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Expor porta
 EXPOSE 3001
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3001/health || exit 1
 
-# Comando para iniciar a aplicação
 CMD ["npm", "start"]
