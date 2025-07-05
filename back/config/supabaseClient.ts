@@ -13,7 +13,7 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 async function testConnection() {
     try {
-        const { data, error } = await supabase.from('user_profiles').select('*').limit(1);
+        const { error } = await supabase.from('user_profiles').select('*').limit(1);
         if (error) {
             throw new Error(error.message);
         }

@@ -10,7 +10,9 @@ const config = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
-    '^(.{1,2}/.*)\.[jt]sx?$': '$1'
+    '^@/config/(.*)$': '<rootDir>/config/$1',
+    '^@/utils/(.*)$': '<rootDir>/utils/$1',
+    '^@/modules/(.*)$': '<rootDir>/modules/$1'
   },
   transformIgnorePatterns: [
     'node_modules/(?!(.*\.mjs$))'

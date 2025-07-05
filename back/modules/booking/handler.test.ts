@@ -1,6 +1,7 @@
 import 'dayjs/locale/pt.js';
 import * as handler from './handler';
 import { Request, Response } from 'express';
+import supabaseClient from '../../config/supabaseClient';
 
 // Mock do dayjs
 jest.mock('dayjs', () => {
@@ -73,7 +74,7 @@ const createMockQuery = () => {
 };
 
 // Mock global do Supabase
-jest.mock('../../config/supabaseClient', () => {
+jest.mock('@/config/supabaseClient', () => {
   const mockQuery = {
     select: jest.fn(),
     insert: jest.fn(),
@@ -145,7 +146,7 @@ describe('Booking Handler', () => {
     mockQuery = createMockQuery();
     
     // Reset the Supabase mock
-    const supabase = require('../../config/supabaseClient').default;
+    const supabase = supabaseClient;
     supabase.from.mockReturnValue(mockQuery);
   });
 
@@ -205,7 +206,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockConflictQuery);
 
       await handler.create(mockUser, validBookingData, mockResponse as Response);
@@ -311,7 +312,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from
         .mockReturnValueOnce(mockNoConflictQuery) // primeira chamada para verificar conflitos
         .mockReturnValueOnce(mockInsertQuery);    // segunda chamada para inserção
@@ -335,7 +336,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockErrorQuery);
 
       await handler.create(mockUser, validBookingData, mockResponse as Response);
@@ -411,7 +412,7 @@ describe('Booking Handler', () => {
         select: jest.fn().mockResolvedValue({ data: null, error: { message: 'Erro na consulta' } })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockErrorQuery);
 
       await handler.getBooking(mockRequest as Request, mockResponse as Response);
@@ -426,7 +427,7 @@ describe('Booking Handler', () => {
         select: jest.fn().mockRejectedValue(new Error('Erro inesperado'))
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockErrorQuery);
 
       await handler.getBooking(mockRequest as Request, mockResponse as Response);
@@ -503,7 +504,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingById(mockRequest as Request, mockResponse as Response);
@@ -519,7 +520,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingById(mockRequest as Request, mockResponse as Response);
@@ -536,7 +537,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingById(mockRequest as Request, mockResponse as Response);
@@ -553,7 +554,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingById(mockRequest as Request, mockResponse as Response);
@@ -606,7 +607,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValueOnce(mockFetchChain).mockReturnValueOnce(mockUpdateChain);
 
       await handler.updateBooking(mockRequest as Request, mockResponse as Response);
@@ -629,7 +630,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.updateBooking(mockRequest as Request, mockResponse as Response);
@@ -683,7 +684,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from
         .mockReturnValueOnce(mockFetchChain)     // primeira chamada para buscar reserva existente
         .mockReturnValueOnce(mockNoConflictQuery) // segunda chamada para verificar conflitos
@@ -703,7 +704,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.updateBooking(mockRequest as Request, mockResponse as Response);
@@ -755,7 +756,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValueOnce(mockFetchChain).mockReturnValueOnce(mockUpdateChain);
 
       await handler.updateBooking(mockRequest as Request, mockResponse as Response);
@@ -777,7 +778,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.deleteBooking(mockRequest as Request, mockResponse as Response);
@@ -793,7 +794,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.deleteBooking(mockRequest as Request, mockResponse as Response);
@@ -810,7 +811,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.deleteBooking(mockRequest as Request, mockResponse as Response);
@@ -852,7 +853,7 @@ describe('Booking Handler', () => {
           ilike: jest.fn().mockResolvedValue({ data: mockBookings, error: null })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.searchBookingsByDescription(mockRequest as Request, mockResponse as Response);
@@ -898,7 +899,7 @@ describe('Booking Handler', () => {
           })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingMy(mockProfileRequest as any, mockResponse as Response);
@@ -950,7 +951,7 @@ describe('Booking Handler', () => {
       const mockChain = {
         select: jest.fn().mockReturnValue(mockQuery)
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingByFilter(mockRequest as Request, mockResponse as Response);
@@ -966,7 +967,7 @@ describe('Booking Handler', () => {
       const mockChain = {
         select: jest.fn().mockReturnValue(mockQuery)
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingByFilter(mockRequest as Request, mockResponse as Response);
@@ -1006,7 +1007,7 @@ describe('Booking Handler', () => {
           or: jest.fn().mockResolvedValue({ data: mockBookings, error: null })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingsByToday(mockRequest as Request, mockResponse as Response);
@@ -1020,7 +1021,7 @@ describe('Booking Handler', () => {
           or: jest.fn().mockResolvedValue({ data: null, error: { message: 'Erro na consulta' } })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingsByToday(mockRequest as Request, mockResponse as Response);
@@ -1060,7 +1061,7 @@ describe('Booking Handler', () => {
           or: jest.fn().mockResolvedValue({ data: mockBookings, error: null })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingsByWeek(mockRequest as Request, mockResponse as Response);
@@ -1074,7 +1075,7 @@ describe('Booking Handler', () => {
           or: jest.fn().mockResolvedValue({ data: null, error: { message: 'Erro na consulta' } })
         })
       };
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from.mockReturnValue(mockChain);
 
       await handler.getBookingsByWeek(mockRequest as Request, mockResponse as Response);
@@ -1130,7 +1131,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainSpecific);
@@ -1162,7 +1163,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainSpecific);
@@ -1228,7 +1229,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainWeekly)
@@ -1271,7 +1272,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainWeekly)
@@ -1312,7 +1313,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = require('../../config/supabaseClient').default;
+      const supabase = supabaseClient;
       supabase.from
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainWeekly)

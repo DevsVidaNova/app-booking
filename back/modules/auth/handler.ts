@@ -13,7 +13,7 @@ type SignUpUserInput = {
 type LoginUserInput = { email: string; password: string };
 type UpdateUserProfileInput = { name: string; phone: string };
 
-interface HandlerResult<T = any> {
+interface HandlerResult<_T = any> {
   error?: any;
   [key: string]: any;
 }

@@ -446,7 +446,7 @@ export async function updateBooking(req: Request, res: Response): Promise<void> 
 export async function deleteBooking(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   try {
-    const { data, error } = await supabase
+    const {  error } = await supabase
       .from("bookings")
       .delete()
       .eq("id", id)

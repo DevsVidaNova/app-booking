@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import * as handler from './handler';
 
 // Mock do dayjs
@@ -21,18 +20,7 @@ jest.mock('dayjs', () => {
 });
 
 // Mock do Supabase
-jest.mock('../../config/supabaseClient', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        gte: jest.fn().mockResolvedValue({ count: 5, error: null })
-      })
-    })
-  }
-}));
-
-jest.mock('../../config/supabaseClient.js', () => ({
+jest.mock('@/config/supabaseClient', () => ({
   __esModule: true,
   default: {
     from: jest.fn().mockReturnValue({

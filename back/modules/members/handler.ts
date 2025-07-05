@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import supabase from "@/config/supabaseClient";
-import translateError from "@/utils/errors";
+import translateError, { DatabaseError } from "@/utils/errors";
 dayjs.extend(customParseFormat);
 
 export interface MemberData {
@@ -67,7 +67,7 @@ export async function createMemberHandler(memberData: MemberData): Promise<Handl
     if (error) throw error;
     return { data };
   } catch (err) {
-    return { error: translateError(err) };
+    return { error: translateError(err as DatabaseError) };
   }
 }
 
@@ -112,7 +112,7 @@ export async function getMembersHandler({ page = 1, limit = 10 }: GetMembersPara
       }
     };
   } catch (err) {
-    return { error: "Erro ao buscar membros." };
+    return { error: "" + err || "Erro ao buscar membros." };
   }
 }
 
@@ -129,7 +129,7 @@ export async function getMemberByIdHandler(id: number | string): Promise<Handler
     
     return { data: formattedData };
   } catch (err) {
-    return { error: "Erro ao buscar membro." };
+    return { error: "" + err ||"Erro ao buscar membro." };
   }
 }
 
@@ -148,7 +148,7 @@ export async function updateMemberHandler(id: number | string, updates: Partial<
     if (error) return { error: error.message };
     return { data };
   } catch (err) {
-    return { error: "Erro ao atualizar membro." };
+    return { error: "" + err || "Erro ao atualizar membro." };
   }
 }
 
@@ -158,7 +158,7 @@ export async function deleteMemberHandler(id: number | string): Promise<HandlerR
     if (error) return { error: error.message };
     return { data: { message: "Membro deletado com sucesso." } };
   } catch (err) {
-    return { error: "Erro ao deletar membro." };
+    return { error: "" + err || "Erro ao deletar membro." };
   }
 }
 
@@ -179,7 +179,7 @@ export async function searchMemberHandler(full_name: string): Promise<HandlerRes
     
     return { data: formattedData };
   } catch (err) {
-    return { error: "Erro ao buscar membro." };
+    return { error: "" + err || "Erro ao buscar membro." };
   }
 }
 
@@ -224,7 +224,7 @@ export async function searchByFilterHandler({ field, value, operator }: SearchBy
     
     return { data: formattedData };
   } catch (err) {
-    return { error: "Erro ao buscar com filtro." };
+    return { error: "" + err || "Erro ao buscar com filtro." };
   }
 }
 
@@ -352,7 +352,7 @@ export async function getAnalyticsHandler(): Promise<HandlerResult<any>> {
       }
     };
   } catch (err) {
-    return { error: "Erro ao buscar estatísticas." };
+    return { error: "" + err ||"Erro ao buscar estatísticas." };
   }
 }
 

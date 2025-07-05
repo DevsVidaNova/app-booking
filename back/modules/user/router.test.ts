@@ -4,6 +4,12 @@ import { Request, Response, NextFunction } from 'express';
 import UserRouter from './router';
 import * as userController from './controller';
 
+interface AuthenticatedRequest extends Request {
+  user?: { id: string; role: string };
+  profile?: { id: string; name: string; role: string };
+  role?: string;
+}
+
 // Mock do controller
 jest.mock('./controller');
 const mockController = userController as jest.Mocked<typeof userController>;
@@ -46,9 +52,10 @@ describe('User Router', () => {
         return;
       }
       
-      (req as any).user = { id: 'admin-123', role: 'admin' };
-      (req as any).profile = { id: '1', name: 'Admin User', role: 'admin' };
-      (req as any).role = 'admin';
+      const authReq = req as AuthenticatedRequest;
+      authReq.user = { id: 'admin-123', role: 'admin' };
+      authReq.profile = { id: '1', name: 'Admin User', role: 'admin' };
+      authReq.role = 'admin';
       next();
     });
     

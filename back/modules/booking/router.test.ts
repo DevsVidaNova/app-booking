@@ -1,4 +1,3 @@
-import { Router } from "express";
 import request from 'supertest';
 import express from 'express';
 import BookingRouter from './router';

@@ -37,7 +37,7 @@ const isValidTime = (time: string | undefined | null): boolean => {
 };
 
 // 📌 1. Criar uma nova reserva
-export const createBooking = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const createBooking = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
   const { description, room, date, start_time, end_time, repeat, day_repeat } = req.body;
   
   // 🔧 CORREÇÃO: Validações mais robustas
@@ -132,7 +132,7 @@ export async function updateBooking(req: Request, res: Response): Promise<void> 
   }
   
   // 🔧 CORREÇÃO: Validações para atualização
-  const { description, room, date, start_time, end_time, repeat, day_repeat } = req.body;
+  const { description, room, start_time, end_time, repeat, day_repeat } = req.body;
   
   // Validar tipos de dados se fornecidos
   if (description !== undefined && (typeof description !== 'string' || description.trim() === '')) {

@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import * as handler from './handler';
 import { MemberData, SearchByFilterParams } from './handler';
 
@@ -21,59 +20,13 @@ jest.mock('dayjs', () => {
 });
 
 // Mock do translateError
-jest.mock('../../utils/errors', () => ({
+jest.mock('@/utils/errors', () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue('Erro traduzido')
 }));
 
 // Mock do Supabase
-jest.mock('../../config/supabaseClient.js', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn().mockReturnValue({
-      insert: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: { id: 1, full_name: 'Test Member' }, error: null })
-        })
-      }),
-      select: jest.fn().mockImplementation((fields) => {
-        if (fields === '*' && typeof fields === 'string') {
-          return {
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: { id: 1, full_name: 'Test Member' }, error: null })
-            }),
-            range: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member', birth_date: '1990-01-15' }], error: null, count: 1 }),
-            ilike: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            neq: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            gt: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            gte: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            lt: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            lte: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            like: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null })
-          };
-        }
-        return {
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: { id: 1, full_name: 'Test Member' }, error: null })
-          })
-        };
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: { id: 1, full_name: 'Updated Member' }, error: null })
-          })
-        })
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ error: null })
-      })
-    })
-  }
-}));
-
-// Mock duplicado para compatibilidade
-jest.mock('../../config/supabaseClient', () => ({
+jest.mock('@/config/supabaseClient', () => ({
   __esModule: true,
   default: {
     from: jest.fn().mockReturnValue({

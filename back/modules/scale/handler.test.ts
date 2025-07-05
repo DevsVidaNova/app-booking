@@ -1,6 +1,5 @@
-import dayjs from 'dayjs';
 import * as handler from './handler';
-import { ScaleInput, Scale } from './handler';
+import { ScaleInput } from './handler';
 
 // Mock do dayjs
 jest.mock('dayjs', () => {
@@ -25,24 +24,7 @@ jest.mock('dayjs', () => {
 jest.mock('dayjs/plugin/customParseFormat.js', () => {});
 
 // Mock do Supabase
-jest.mock('../../config/supabaseClient.js', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn(() => ({
-      insert: jest.fn().mockResolvedValue({ data: null, error: null }),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      range: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      ilike: jest.fn().mockReturnThis()
-    }))
-  }
-}));
-
-// Mock duplicado para compatibilidade
-jest.mock('../../config/supabaseClient', () => ({
+jest.mock('@/config/supabaseClient', () => ({
   __esModule: true,
   default: {
     from: jest.fn(() => ({

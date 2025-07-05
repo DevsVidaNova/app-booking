@@ -1,7 +1,7 @@
 // Funções puras de acesso ao banco de dados para escala
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
-import supabase from "../../config/supabaseClient.js";
+import supabase from "@/config/supabaseClient";
 dayjs.extend(customParseFormat);
 
 export interface ScaleInput {
@@ -21,13 +21,23 @@ export interface ScaleInput {
   direction: string;
 }
 
+interface DirectionData {
+  id: string;
+  full_name: string;
+}
+
+interface BandData {
+  id: string;
+  full_name: string;
+}
+
 export interface Scale {
   id: string;
   date: string;
   name: string;
   description?: string;
-  direction?: any;
-  band?: any;
+  direction?: DirectionData;
+  band?: BandData;
   projection?: string;
   light?: string;
   transmission?: string;
@@ -70,7 +80,7 @@ export async function createScaleHandler(input: ScaleInput): Promise<HandlerResu
       return { error: error.message };
     }
     return { data: null };
-  } catch (err) {
+  } catch {
     return { error: "Erro ao criar escala." };
   }
 }
@@ -113,7 +123,7 @@ export async function getScalesHandler(params: GetScalesParams): Promise<Handler
         },
       },
     };
-  } catch (err) {
+  } catch {
     return { error: "Erro ao listar escalas." };
   }
 }
@@ -129,7 +139,7 @@ export async function getScaleByIdHandler(id: string): Promise<HandlerResult<Sca
       return { error: "Escala não encontrada." };
     }
     return { data: data as Scale };
-  } catch (err) {
+  } catch {
     return { error: "Erro ao buscar escala." };
   }
 }
@@ -164,7 +174,7 @@ export async function updateScaleHandler(id: string, updates: Partial<ScaleInput
     const { error } = await supabase.from("scales").update(updates).eq("id", id);
     if (error) return { error: error.message };
     return { data: null };
-  } catch (err) {
+  } catch {
     return { error: "Erro ao atualizar escala." };
   }
 }
@@ -185,7 +195,7 @@ export async function deleteScaleHandler(id: string): Promise<HandlerResult<null
     const { error } = await supabase.from("scales").delete().eq("id", id);
     if (error) return { error: "Erro ao excluir escala." };
     return { data: null };
-  } catch (err) {
+  } catch {
     return { error: "Erro ao excluir escala." };
   }
 }
@@ -199,7 +209,7 @@ export async function searchScaleHandler(name: string): Promise<HandlerResult<Sc
     const { data, error } = await supabase.from("scales").select("*").ilike("name", `%${name}%`);
     if (error) return { error: "Erro ao buscar escala." };
     return { data: data as Scale[] };
-  } catch (err) {
+  } catch {
     return { error: "Erro ao buscar escala." };
   }
 }
@@ -213,7 +223,7 @@ export async function duplicateScaleHandler(id: string): Promise<HandlerResult<S
     const { data: duplicatedScale, error: insertError } = await supabase.from("scales").insert([originalScale]).select().single();
     if (insertError) return { error: "Erro ao duplicar escala." };
     return { data: duplicatedScale as Scale };
-  } catch (err) {
+  } catch {
     return { error: "Erro ao duplicar escala." };
   }
 }

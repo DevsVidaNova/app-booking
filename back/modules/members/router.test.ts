@@ -298,19 +298,19 @@ describe('Members Router', () => {
       for (const route of routes) {
         jest.clearAllMocks();
         
-        let response;
+        let _response;
         switch (route.method) {
           case 'post':
-            response = await request(app).post(route.path).send(route.data);
+            _response = await request(app).post(route.path).send(route.data);
             break;
           case 'get':
-            response = await request(app).get(route.path);
+            _response = await request(app).get(route.path);
             break;
           case 'put':
-            response = await request(app).put(route.path).send(route.data);
+            _response = await request(app).put(route.path).send(route.data);
             break;
           case 'delete':
-            response = await request(app).delete(route.path);
+            _response = await request(app).delete(route.path);
             break;
         }
         
@@ -322,7 +322,7 @@ describe('Members Router', () => {
   describe('Error Handling', () => {
     it('deve lidar com erros do controller createMember', async () => {
       // Given
-      mockController.createMember.mockImplementation(async (req, res) => {
+      mockController.createMember.mockImplementation(async (_req, res) => {
         res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
       });
 

@@ -7,7 +7,7 @@ import {
   updateRoomHandler,
   deleteRoomHandler,
   searchRoomHandler,
-} from "./handler.js";
+} from "./handler";
 dayjs.extend(customParseFormat);
 
 // 📌 1. Criar uma nova sala

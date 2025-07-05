@@ -1,4 +1,4 @@
-import { signUpUser, loginUser, getUserProfile, updateUserProfile, deleteUser, logout } from './controller';
+import { signUpUser, loginUser, getUserProfile, deleteUser, logout } from './controller';
 import * as handler from './handler';
 
 // Mock do handler

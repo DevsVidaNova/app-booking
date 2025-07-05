@@ -15,7 +15,7 @@ const requireAuth: RequestHandler = async (req, res, next) => {
       return 
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: _profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.user.id)
@@ -72,7 +72,7 @@ const requireAdmin: RequestHandler = async (req, res, next) => {
 };
 
 // 📌 3. Sem necessidade de autenticao
-const publicRoute: RequestHandler = (req, res, next) => {
+const publicRoute: RequestHandler = (_req, _res, next) => {
   next(); 
 };
 

@@ -45,8 +45,7 @@ jest.mock('../../config/middleware', () => ({
 }));
 
 // Importar os mocks para usar nos testes
-const { requireAuth, requireAdmin, publicRoute } = require('../../config/middleware');
-const mockRequireAuth = requireAuth as jest.MockedFunction<typeof requireAuth>;
+import { requireAdmin, publicRoute } from '../../config/middleware';
 const mockRequireAdmin = requireAdmin as jest.MockedFunction<typeof requireAdmin>;
 const mockPublicRoute = publicRoute as jest.MockedFunction<typeof publicRoute>;
 
@@ -88,7 +87,7 @@ describe('Room Router', () => {
       next();
     });
     
-    mockPublicRoute.mockImplementation((req: Request, res: Response, next: NextFunction) => next());
+    mockPublicRoute.mockImplementation((_req: Request, _res: Response, next: NextFunction) => next());
   });
 
   describe('POST /', () => {
@@ -115,7 +114,7 @@ describe('Room Router', () => {
     });
 
     it('deve bloquear acesso quando requireAdmin falha', async () => {
-      mockRequireAdmin.mockImplementation((req: Request, res: Response, next: NextFunction) => {
+      mockRequireAdmin.mockImplementation((_req: Request, res: Response, _next: NextFunction) => {
         res.status(403).json({ error: 'Acesso negado' });
       });
 
@@ -259,7 +258,7 @@ describe('Room Router', () => {
     });
 
     it('deve bloquear acesso quando requireAdmin falha', async () => {
-      mockRequireAdmin.mockImplementation((req: Request, res: Response, next: NextFunction) => {
+      mockRequireAdmin.mockImplementation((_req: Request, res: Response, _next: NextFunction) => {
         res.status(403).json({ error: 'Acesso negado' });
       });
 
@@ -312,7 +311,7 @@ describe('Room Router', () => {
     });
 
     it('deve bloquear acesso quando requireAdmin falha', async () => {
-      mockRequireAdmin.mockImplementation((req: Request, res: Response, next: NextFunction) => {
+      mockRequireAdmin.mockImplementation((_req: Request, res: Response, _next: NextFunction) => {
         res.status(403).json({ error: 'Acesso negado' });
       });
 

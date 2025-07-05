@@ -1,23 +1,7 @@
 import * as handler from './handler';
 
-type CreateUserInput = {
-  name: string;
-  phone: string;
-  role?: string;
-  password: string;
-  email: string;
-};
-
-type UpdateUserInput = {
-  userId: string;
-  name?: string;
-  phone?: string;
-  email?: string;
-  role?: string;
-};
-
 // Mock do Supabase
-jest.mock('../../config/supabaseClient.js', () => ({
+jest.mock('@/config/supabaseClient', () => ({
   __esModule: true,
   default: {
     from: jest.fn(() => ({
@@ -41,45 +25,9 @@ jest.mock('../../config/supabaseClient.js', () => ({
   }
 }));
 
-// Mock duplicado para compatibilidade
-jest.mock('../../config/supabaseClient', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      range: jest.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
-      delete: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis()
-    })),
-    auth: {
-      signUp: jest.fn().mockResolvedValue({ 
-        data: { user: { id: 'user-123' } }, 
-        error: null 
-      }),
-      admin: {
-        deleteUser: jest.fn().mockResolvedValue({ error: null })
-      }
-    }
-  }
-}));
 
-const mockUser = {
-  id: '1',
-  name: 'João Silva',
-  phone: '11999999999',
-  role: 'user',
-  user_id: 'user-123',
-  email: 'joao@example.com'
-};
 
-const mockUsersList = {
-  data: [mockUser],
-  error: null,
-  count: 1
-};
+
 
 describe('User Handler', () => {
   beforeEach(() => {

@@ -6,17 +6,12 @@ import {
   deleteMember,
   searchMember,
   searchByFilter,
-  getAnalytics
 } from './controller';
 import * as handler from './handler';
-import supabase from '@/config/supabaseClient';
-
-// Mock dos handlers
 jest.mock('./handler');
 jest.mock('@/config/supabaseClient');
 
 const mockHandler = handler as jest.Mocked<typeof handler>;
-const mockSupabase = supabase as jest.Mocked<typeof supabase>;
 
 describe('Members Controller', () => {
   let mockReq: any;

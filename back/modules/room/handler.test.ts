@@ -1,6 +1,5 @@
-import dayjs from 'dayjs';
 import * as handler from './handler';
-import { RoomInput, UpdateRoomInput } from './handler';
+import { UpdateRoomInput } from './handler';
 
 // Mock do dayjs
 jest.mock('dayjs', () => {
