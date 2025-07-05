@@ -1,41 +1,30 @@
-/** @type {import('jest').Config} */
-const config = {
+export default {
+  preset: 'ts-jest',
   testEnvironment: 'node',
-  preset: 'ts-jest/presets/default-esm',
   extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@/config/(.*)$': '<rootDir>/config/$1',
     '^@/utils/(.*)$': '<rootDir>/utils/$1',
     '^@/modules/(.*)$': '<rootDir>/modules/$1'
   },
+  moduleDirectories: ['node_modules', 'src'],
   transformIgnorePatterns: [
     'node_modules/(?!(.*\.mjs$))'
   ],
+  transform: {
+    '^.+\.tsx?$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+      useESM: true
+    }]
+  },
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   collectCoverageFrom: [
-    'controller/**/*.js',
-    'controller/**/*.ts',
-    'controller/**/*.tsx',
-    'services/**/*.js',
-    'services/**/*.ts',
-    'services/**/*.tsx',
-    'utils/**/*.js',
     'utils/**/*.ts',
-    'utils/**/*.tsx',
-    'modules/**/*.js',
     'modules/**/*.ts',
-    'modules/**/*.tsx',
-    '!**/*.test.js',
     '!**/*.test.ts',
-    '!**/*.test.tsx',
     '!**/node_modules/**'
   ],
   testMatch: [
@@ -45,7 +34,13 @@ const config = {
     '**/?(*.)+(spec|test).[jt]s',
     '**/?(*.)+(spec|test).[jt]sx'
   ],
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  coverageThreshold: {
+    global: {
+      branches: 50,
+      functions: 50,
+      lines: 0,
+      statements: 50
+    }
+  },
 };
-
-export default config;

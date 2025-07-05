@@ -1,8 +1,8 @@
 {
   "name": "agenda-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
-  "main": "server.js",
+  "main": "server.ts",
   "dependencies": {
     "@supabase/supabase-js": "^2.48.1",
     "@types/supertest": "^6.0.3",
