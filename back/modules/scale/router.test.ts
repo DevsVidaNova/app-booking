@@ -3,8 +3,6 @@ import express from 'express';
 import ScaleRouter from './router';
 import * as controller from './controller';
 import { requireAdmin, requireAuth } from '@/config/middleware';
-
-// Mock do controller
 jest.mock('./controller');
 const mockController = controller as jest.Mocked<typeof controller>;
 

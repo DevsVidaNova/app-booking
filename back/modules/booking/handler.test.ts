@@ -1,7 +1,7 @@
 import 'dayjs/locale/pt.js';
 import * as handler from './handler';
 import { Request, Response } from 'express';
-import supabaseClient from '../../config/supabaseClient';
+import supabaseClient from '@/config/supabaseClient';
 
 // Mock do dayjs
 jest.mock('dayjs', () => {
@@ -147,7 +147,7 @@ describe('Booking Handler', () => {
     
     // Reset the Supabase mock
     const supabase = supabaseClient;
-    supabase.from.mockReturnValue(mockQuery);
+(supabase.from as jest.Mock).mockReturnValue(mockQuery);
   });
 
   describe('create', () => {
@@ -207,7 +207,7 @@ describe('Booking Handler', () => {
       };
       
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockConflictQuery);
+      (supabase.from as jest.Mock).mockReturnValue(mockConflictQuery);
 
       await handler.create(mockUser, validBookingData, mockResponse as Response);
 
@@ -312,8 +312,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from
+      (supabaseClient.from as jest.Mock)
         .mockReturnValueOnce(mockNoConflictQuery) // primeira chamada para verificar conflitos
         .mockReturnValueOnce(mockInsertQuery);    // segunda chamada para inserção
 
@@ -337,7 +336,7 @@ describe('Booking Handler', () => {
       };
       
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockErrorQuery);
+      (supabase.from as jest.Mock).mockReturnValue(mockErrorQuery);
 
       await handler.create(mockUser, validBookingData, mockResponse as Response);
 
@@ -413,7 +412,7 @@ describe('Booking Handler', () => {
       };
       
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockErrorQuery);
+(supabase.from as jest.Mock).mockReturnValue(mockErrorQuery);
 
       await handler.getBooking(mockRequest as Request, mockResponse as Response);
 
@@ -428,7 +427,7 @@ describe('Booking Handler', () => {
       };
       
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockErrorQuery);
+(supabase.from as jest.Mock).mockReturnValue(mockErrorQuery);
 
       await handler.getBooking(mockRequest as Request, mockResponse as Response);
 
@@ -505,7 +504,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+(supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingById(mockRequest as Request, mockResponse as Response);
 
@@ -521,7 +520,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+(supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingById(mockRequest as Request, mockResponse as Response);
 
@@ -538,7 +537,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+(supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingById(mockRequest as Request, mockResponse as Response);
 
@@ -555,7 +554,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingById(mockRequest as Request, mockResponse as Response);
 
@@ -607,8 +606,9 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from.mockReturnValueOnce(mockFetchChain).mockReturnValueOnce(mockUpdateChain);
+      (supabaseClient.from as jest.Mock)
+        .mockReturnValueOnce(mockFetchChain)
+        .mockReturnValueOnce(mockUpdateChain);
 
       await handler.updateBooking(mockRequest as Request, mockResponse as Response);
 
@@ -631,7 +631,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.updateBooking(mockRequest as Request, mockResponse as Response);
 
@@ -684,8 +684,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from
+      (supabaseClient.from as jest.Mock)
         .mockReturnValueOnce(mockFetchChain)     // primeira chamada para buscar reserva existente
         .mockReturnValueOnce(mockNoConflictQuery) // segunda chamada para verificar conflitos
         .mockReturnValueOnce(mockUpdateChain);    // terceira chamada para atualização
@@ -705,7 +704,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.updateBooking(mockRequest as Request, mockResponse as Response);
 
@@ -756,8 +755,9 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from.mockReturnValueOnce(mockFetchChain).mockReturnValueOnce(mockUpdateChain);
+      (supabaseClient.from as jest.Mock)
+        .mockReturnValueOnce(mockFetchChain)
+        .mockReturnValueOnce(mockUpdateChain);
 
       await handler.updateBooking(mockRequest as Request, mockResponse as Response);
 
@@ -779,7 +779,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.deleteBooking(mockRequest as Request, mockResponse as Response);
 
@@ -795,7 +795,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.deleteBooking(mockRequest as Request, mockResponse as Response);
 
@@ -812,7 +812,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.deleteBooking(mockRequest as Request, mockResponse as Response);
 
@@ -854,8 +854,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
-
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
       await handler.searchBookingsByDescription(mockRequest as Request, mockResponse as Response);
 
       expect(mockJson).toHaveBeenCalled();
@@ -900,7 +899,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingMy(mockProfileRequest as any, mockResponse as Response);
 
@@ -952,7 +951,7 @@ describe('Booking Handler', () => {
         select: jest.fn().mockReturnValue(mockQuery)
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingByFilter(mockRequest as Request, mockResponse as Response);
 
@@ -968,7 +967,7 @@ describe('Booking Handler', () => {
         select: jest.fn().mockReturnValue(mockQuery)
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingByFilter(mockRequest as Request, mockResponse as Response);
 
@@ -1008,7 +1007,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingsByToday(mockRequest as Request, mockResponse as Response);
 
@@ -1022,7 +1021,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingsByToday(mockRequest as Request, mockResponse as Response);
 
@@ -1062,7 +1061,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingsByWeek(mockRequest as Request, mockResponse as Response);
 
@@ -1076,7 +1075,7 @@ describe('Booking Handler', () => {
         })
       };
       const supabase = supabaseClient;
-      supabase.from.mockReturnValue(mockChain);
+      (supabase.from as jest.Mock).mockReturnValue(mockChain);
 
       await handler.getBookingsByWeek(mockRequest as Request, mockResponse as Response);
 
@@ -1131,8 +1130,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from
+      (supabaseClient.from as jest.Mock)
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainSpecific);
 
@@ -1163,8 +1161,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from
+      (supabaseClient.from as jest.Mock)
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainSpecific);
 
@@ -1229,8 +1226,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from
+      (supabaseClient.from as jest.Mock)
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainWeekly)
         .mockReturnValueOnce(mockChainSpecific);
@@ -1272,8 +1268,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from
+      (supabaseClient.from as jest.Mock)
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainWeekly)
         .mockReturnValueOnce(mockChainSpecific);
@@ -1313,8 +1308,7 @@ describe('Booking Handler', () => {
         })
       };
       
-      const supabase = supabaseClient;
-      supabase.from
+      (supabaseClient.from as jest.Mock)
         .mockReturnValueOnce(mockChainMonthly)
         .mockReturnValueOnce(mockChainWeekly)
         .mockReturnValueOnce(mockChainSpecific);

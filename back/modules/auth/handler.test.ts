@@ -81,7 +81,7 @@ describe("Manipulador de Autenticação", () => {
   describe("signUpUserHandler", () => {
     it("deve criar usuário com sucesso", async () => {
       // Mock para verificação de email duplicado (deve retornar null para permitir criação)
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({ data: null, error: null }),
@@ -90,13 +90,13 @@ describe("Manipulador de Autenticação", () => {
       });
 
       // Mock para signUp
-      mockSupabase.auth.signUp.mockResolvedValue({
+      (mockSupabase.auth.signUp as jest.Mock).mockResolvedValue({
         data: { user: { id: "user123" } },
         error: null,
       });
 
       // Mock para inserção do perfil
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         insert: jest.fn().mockReturnValue({
           select: jest.fn().mockResolvedValue({
             data: [
@@ -127,7 +127,7 @@ describe("Manipulador de Autenticação", () => {
 
     it("deve retornar erro quando email já existe", async () => {
       // Mock para verificação de email duplicado (retorna usuário existente)
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest
@@ -191,7 +191,7 @@ describe("Manipulador de Autenticação", () => {
   describe("getUserProfileHandler", () => {
     it("deve buscar perfil do usuário", async () => {
       // Mock para buscar perfil existente
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest
@@ -211,7 +211,7 @@ describe("Manipulador de Autenticação", () => {
 
     it("deve retornar erro quando usuário não existe", async () => {
       // Mock para usuário não encontrado
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({ data: null, error: null }),
@@ -229,7 +229,7 @@ describe("Manipulador de Autenticação", () => {
   describe("updateUserProfileHandler", () => {
     it("deve atualizar perfil do usuário", async () => {
       // Mock para verificar se usuário existe
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest
@@ -240,7 +240,7 @@ describe("Manipulador de Autenticação", () => {
       });
 
       // Mock para atualização
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         update: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             select: jest
@@ -265,7 +265,7 @@ describe("Manipulador de Autenticação", () => {
 
     it("deve retornar erro quando usuário não existe", async () => {
       // Mock para usuário não encontrado
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({ data: null, error: null }),
@@ -288,7 +288,7 @@ describe("Manipulador de Autenticação", () => {
   describe("deleteUserHandler", () => {
     it("deve deletar usuário com sucesso", async () => {
       // Mock para verificar se usuário existe
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest
@@ -299,14 +299,14 @@ describe("Manipulador de Autenticação", () => {
       });
 
       // Mock para deletar perfil
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         delete: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({ error: null }),
         }),
       });
 
       // Mock para deletar usuário do auth
-      mockSupabase.auth.admin.deleteUser.mockResolvedValue({ error: null });
+(mockSupabase.auth.admin.deleteUser as jest.Mock).mockResolvedValue({ error: null });
 
       const result = await deleteUserHandler("user123");
       expect(result.success).toBe(true);
@@ -315,7 +315,7 @@ describe("Manipulador de Autenticação", () => {
 
     it("deve retornar erro quando usuário não existe", async () => {
       // Mock para usuário não encontrado
-      mockSupabase.from.mockReturnValueOnce({
+      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({ data: null, error: null }),

@@ -114,7 +114,7 @@ export async function getScalesHandler(params: GetScalesParams): Promise<Handler
     }
     return {
       data: {
-        scales: data as Scale[],
+        scales: data as any,
         pagination: {
           total: count || 0,
           page,
