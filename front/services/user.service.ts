@@ -1,6 +1,6 @@
 import { fetchApi, fetchWithAuth, } from "@/hooks/api";
 import { createToken } from "@/hooks/token";
-import { CreateUser, EditUser, ListUser, LoginUser } from "./types";
+import { CreateUser, EditUser, ListUser, } from "../types";
 import { createUser } from "@/hooks/user";
 
 export const registerUser = async (data: CreateUser): Promise<CreateUser> => {
