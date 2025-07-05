@@ -12,23 +12,23 @@ jobs:
     defaults:
       run:
         working-directory: ./back
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: back/package-lock.json
-    
+
     - name: Install dependencies
       run: npm ci
-    
+
     - name: Run tests
       run: npm test
-    
+
     - name: Run linting
       run: npm run lint
 
@@ -37,23 +37,23 @@ jobs:
     defaults:
       run:
         working-directory: ./front
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: front/package-lock.json
-    
+
     - name: Install dependencies
       run: npm ci
-    
+
     - name: Build application
       run: npm run build
-    
+
     - name: Run linting
       run: npm run lint
 
@@ -61,36 +61,20 @@ jobs:
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Build and push backend
-      uses: docker/build-push-action@v5
-      with:
-        context: ./back
-        push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/app-booking-backend:latest
-    
-    - name: Build and push frontend
-      uses: docker/build-push-action@v5
-      with:
-        context: ./front
-        push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/app-booking-frontend:latest
-    
-    - name: Deploy to production
+    - name: Deploy to production via SSH
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: |
+          set -e
           cd /opt/app-booking
-          docker-compose pull
-          docker-compose up -d
+          git pull origin main
+          docker-compose down
+          docker-compose build
+          docker-compose up -d --remove-orphans
           docker system prune -f
-          echo "Deploy completed successfully!"
+          echo "✅ Deploy completo com sucesso!"
