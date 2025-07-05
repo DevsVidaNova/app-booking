@@ -95,7 +95,8 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          cd /path/to/your/app
+          cd /opt/app-booking
           docker-compose pull
           docker-compose up -d
           docker system prune -f
+          echo "Deploy completed successfully!"

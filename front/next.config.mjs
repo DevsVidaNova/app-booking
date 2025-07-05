@@ -23,18 +23,21 @@ const nextConfig = {
     parallelServerCompiles: true,
   },
   async rewrites() {
+    // Use variável de ambiente para API URL, com fallback para desenvolvimento
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    
     return [
       {
         source: '/api/:path*',  // Qualquer rota que começa com "/api"
-        destination: 'https://www.espacovidanova.com.br/api/:path*',  // Reescreve para o backend
+        destination: `${apiUrl}/:path*`,  // Reescreve para o backend
       },
       {
         source: '/webhook/:path*',  // Qualquer rota que começa com "/webhook"
-        destination: 'https://www.espacovidanova.com.br/webhook/:path*',  // Reescreve para o backend
+        destination: `${apiUrl}/webhook/:path*`,  // Reescreve para o backend
       },
       {
         source: '/supabase/:path*', 
-        destination: 'https://www.espacovidanova.com.br/supabase/:path*',  
+        destination: `${apiUrl}/supabase/:path*`,  
       },
     ];
   },
