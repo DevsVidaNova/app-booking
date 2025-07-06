@@ -91,7 +91,7 @@ export default function Login() {
             <div className="grid gap-1.5 leading-none">
               <label
                 htmlFor="terms1"
-                className="text-sm font-medium text-primary opacity-70 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium text-primary opacity-70 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mt-1.5"
               >
                 Manter conectado
               </label>
@@ -109,13 +109,16 @@ export default function Login() {
           </Button>
         </div>
       </Card>
-      <p className="mt-8 text-gray-500 w-[300px] text-center">
+     
+    </div>
+  )
+}
+
+/*
+ <p className="mt-8 text-gray-500 w-[300px] text-center">
         Ao continuar, você concorda com nossos
         <a href="/privacy" className="text-gray-700 underline"> Politica de Privacidade </a>
         e
         <a href="/terms" className="text-gray-700 underline"> Termos de Uso</a>.
       </p>
-    </div>
-  )
-}
-
+*/
