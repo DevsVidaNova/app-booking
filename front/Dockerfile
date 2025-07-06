@@ -26,9 +26,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Copia tudo do build (inclusive .next, node_modules, app/, components/, etc.)
+# Copia tudo, exceto .next
 COPY --from=builder /app ./
-
+COPY --from=builder /app/.next ./.next
+RUN echo "<- CAMINHO DO NEXT "
+RUN ls -la .next
+RUN echo "✅ BUILD SUCEDIDO"
 # Expor porta
 EXPOSE 3000
 
