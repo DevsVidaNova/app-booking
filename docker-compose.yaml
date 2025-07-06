@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   # Backend API
   api:
@@ -15,6 +17,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - app-network
+      - supabase-network
 
   # Frontend Next.js
   frontend:
@@ -39,6 +44,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - app-network
+      - supabase-network
 
   # Nginx Reverse Proxy (opcional)
   nginx:
@@ -53,6 +61,9 @@ services:
       - frontend
       - api
     restart: unless-stopped
+    networks:
+      - app-network
+      - supabase-network
 
 volumes:
   node_modules_api:
