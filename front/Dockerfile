@@ -1,43 +1,19 @@
-# Etapa base
-FROM node:20-alpine AS base
-WORKDIR /app
-RUN apk add --no-cache libc6-compat curl
+FROM node:20-alpine
 
-# Etapa de dependências
-FROM base AS deps
+# Diretório da aplicação
+WORKDIR /app
+
+# Copia os arquivos de dependência
 COPY package*.json ./
-RUN npm ci
 
-# Etapa de build
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Instala dependências
+RUN npm install
+
+# Copia o restante do código
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build || (echo "❌ BUILD FALHOU" && exit 1)
 
-# Etapa final
-FROM base AS runner
-WORKDIR /app
-
-# Variáveis de ambiente
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
-
-# Copia tudo, exceto .next
-COPY --from=builder /app ./
-COPY --from=builder /app/.next ./.next
-RUN echo "<- CAMINHO DO NEXT "
-RUN ls -la .next
-RUN echo "✅ BUILD SUCEDIDO"
-# Expor porta
+# Expor a porta padrão do Next.js dev server
 EXPOSE 3000
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000 || exit 1
-
-# Iniciar app Next.js
-CMD ["npm", "start"]
+# Comando padrão: inicia o Next.js em modo dev
+CMD ["npm", "run", "dev"]
