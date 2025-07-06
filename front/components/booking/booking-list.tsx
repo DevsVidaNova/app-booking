@@ -149,7 +149,7 @@ const BookingItem = ({ data, onEdit }: { data: ListBooking[], onEdit: (booking: 
     return (
         <div className='gap-8 z-0'>
             {data?.map((booking: ListBooking) => {
-                const { end_time, start_time, room, user, date, id, description, repeat, day_of_week, month } = booking;
+                const { end_time, start_time, room, user, date, id, description, repeat, day_of_week, month, } = booking;
                 const repeats = [{ id: 'day', name: 'DIA' }, { id: 'week', name: 'SEM' }, { id: 'month', name: 'MÊS' }];
                 const repeatName = repeats.find((r) => r.id === repeat)?.name;
 
@@ -174,7 +174,7 @@ const BookingItem = ({ data, onEdit }: { data: ListBooking[], onEdit: (booking: 
                                 </div>
                                 <div className='flex-row flex gap-2 items-center opacity-70'>
                                     <MapPin size={12} />
-                                    <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{room.name} - {description?.length > 24 ? description?.slice(0, 21) + '...' : description}</span>
+                                    <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{room?.name} - {description?.length > 24 ? description?.slice(0, 21) + '...' : description}</span>
                                 </div>
                             </div>
                         </div>

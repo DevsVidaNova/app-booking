@@ -4,9 +4,9 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { format, parse, isValid } from 'date-fns'
+import { format } from 'date-fns'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarSearch, CalendarX2, HelpCircle, Users } from 'lucide-react'
+import { CalendarSearch, HelpCircle, Users } from 'lucide-react'
 
 import {
   Button,
@@ -29,7 +29,6 @@ import {
   CardTitle,
 } from '@/components/ui'
 
-import { ListRoom } from '@/types'
 import { listRooms } from '@/services/rooms.service'
 
 // Schema de validação
@@ -76,9 +75,9 @@ export function BookingFormBase({
     },
   })
 
-  const { data: rooms, isLoading: roomsLoading } = useQuery<ListRoom[]>({
+  const { data: rooms, isLoading: roomsLoading } = useQuery({
     queryKey: ['rooms'],
-    queryFn: listRooms,
+    queryFn: () => listRooms(1),
   })
 
   const handleSubmit = async (data: BookingFormData) => {
@@ -161,9 +160,9 @@ export function BookingFormBase({
                           Carregando salas...
                         </SelectItem>
                       ) : (
-                        rooms?.map((room) => (
+                        rooms?.data?.map((room) => (
                           <SelectItem key={room.id} value={room.id.toString()}>
-                            {room.name} - Capacidade: {room.capacity}
+                            {room?.name} - Capacidade: {room?.size}
                           </SelectItem>
                         ))
                       )}

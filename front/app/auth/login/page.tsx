@@ -54,7 +54,7 @@ export default function Login() {
       <Card className="w-[350px] self-center border-none shadow-none">
         <CardHeader>
           <Link href="/" className='w-full items-center self-center mx-auto flex flex-col justify-center'>
-            <Image src="/imgs/logo_black.png" alt="logo black" className="w-[220px] h-[70px] bg-gray self-center items-center" />
+            <Image src="/imgs/logo_black.png" width={220} height={70} alt="logo black" className="w-[220px] h-[70px] bg-gray self-center items-center" />
           </Link>
           <CardTitle className="text-2xl hidden">Entrar</CardTitle>
           <CardDescription className='hidden'>Digite seu email e senha para acessar sua conta.</CardDescription>

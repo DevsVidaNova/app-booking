@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
 import { BookMarked, Church, MapPin, Users } from 'lucide-react'
-import { Analytics, } from '../__api/types'
+import { Analytics, } from '@/types'
 import { useQuery } from '@tanstack/react-query'
 import { listAnalytics, } from '@/services/dashboard.service'
 import { getMembersAnalytics } from "@/services/members.service"

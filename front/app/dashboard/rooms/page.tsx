@@ -46,7 +46,7 @@ const ListRooms = ({ rooms, refetch, setpage, page }: { rooms: ListRoom; refetch
         </div>
         <div>
           <TableRooms rooms={rooms?.data || []} refetch={refetch} />
-          <Pagination page={page} setpage={setpage} data={rooms} />
+          <Pagination page={page} setpage={setpage} data={rooms} hideText={false}/>
           <div className="h-[120px]"></div>
         </div>
       </div>
