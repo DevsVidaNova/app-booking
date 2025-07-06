@@ -13,7 +13,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Etapa final
@@ -26,7 +26,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Copiar arquivos do projeto e dependências
+# Copiar arquivos necessários
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package*.json ./
@@ -36,10 +36,9 @@ COPY --from=builder /app/node_modules ./node_modules
 # Copiar tudo mais (ex: pages, app, styles, etc)
 COPY --from=builder /app/ ./
 
-
-# Criar usuário seguro
-RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
-USER nextjs
+# ⚠️ REMOVA por enquanto o usuário não-root
+# RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+# USER nextjs
 
 # Expor porta
 EXPOSE 3000
