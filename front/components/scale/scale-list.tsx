@@ -19,7 +19,7 @@ import {
   PaginationLink,
 } from "@/components/ui/";
 
-import { SingleScale } from '../../app/__api/types';
+import { SingleScale } from '@/types';
 import { ScaleAdd } from './scale-add';
 import { ScaleEdit } from './scale-edit';
 import { deleteScale } from '@/services/scale.service';

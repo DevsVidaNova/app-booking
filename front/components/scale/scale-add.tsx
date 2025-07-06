@@ -32,7 +32,7 @@ import { CalendarSearch, CalendarX2 } from "lucide-react";
 
 import { ListUser } from "@/types";
 import { listUsers } from "@/services/admin.service";
-import { addScale } from "@/services/admin.service";
+import { addScale } from "@/services/scale.service";
 import { Combobox } from "@/components/ui/combobox";
 
 const formSchema = z.object({
@@ -117,11 +117,9 @@ export function ScaleAdd({ refetch }: { refetch: () => void }) {
 
   const {
     data: users,
-    error: errorUsers,
-    isLoading,
   } = useQuery<ListUser[]>({
     queryKey: ["list users"],
-    queryFn: listUsers,
+    queryFn: () => listUsers(1),
   });
 
   const [success, setsuccess] = useState("");

@@ -1,7 +1,7 @@
 # Etapa base
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat curl
 
 # Etapa de dependências
 FROM base AS deps
@@ -14,7 +14,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+
+# ADICIONE esse comando para forçar falha se build der erro
+RUN npm run build || (echo "❌ BUILD FALHOU" && exit 1)
 
 # Etapa final
 FROM base AS runner
@@ -33,12 +35,14 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copiar tudo mais (ex: pages, app, styles, etc)
-COPY --from=builder /app/ ./
-
-# ⚠️ REMOVA por enquanto o usuário não-root
-# RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
-# USER nextjs
+# Copiar app, pages, etc (evite sobrescrever .next)
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/components ./components
+COPY --from=builder /app/styles ./styles
+COPY --from=builder /app/hooks ./hooks
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/services ./services
+COPY --from=builder /app/types ./types
 
 # Expor porta
 EXPOSE 3000

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/"
 
 import { Pencil } from "lucide-react"
-import { editUser } from "@/services/admin.service"
+import { editUser } from "@/services/user.service"
 
 const formSchema = z.object({
     name: z.string().min(2, {
