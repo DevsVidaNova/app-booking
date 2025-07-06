@@ -59,5 +59,9 @@ volumes:
   node_modules_frontend:
 
 networks:
-  default:
+  app-network:
     driver: bridge
+
+  supabase-network:
+    external: true
+    name: supabase_default
