@@ -10,7 +10,7 @@
       "@/*": ["*"],
       "@/config/*": ["config/*"],
       "@/utils/*": ["utils/*"],
-      "@/modules/*": ["modules/*"],
+      "@/modules/*": ["modules/*"]
     },
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -18,5 +18,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["modules/**/*", "controller/**/*", "config/**/*", "server.ts"]
+  "include": ["modules/**/*", "config/**/*", "utils/**/*", "server.ts"]
 }
