@@ -1,5 +1,5 @@
 import { fetchApi, fetchWithAuth } from "@/hooks/api";
-import { ListRoom, CreateRoom } from "./types";
+import { ListRoom, CreateRoom } from "@/types";
 
 export const listRooms = async (page: number): Promise<ListRoom> => {
   try {

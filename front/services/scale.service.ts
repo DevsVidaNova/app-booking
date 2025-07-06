@@ -1,6 +1,5 @@
 import { fetchWithAuth, } from "@/hooks/api";
-import { ListScale, SingleScale, CreateScale } from "./types";
-import { Pagination } from '@/app/__api/types';
+import { ListScale, SingleScale, CreateScale, Pagination } from "@/types";
 
 export const listScales = async (page: number): Promise<{scales: SingleScale[]; pagination: Pagination }> => {
     try {

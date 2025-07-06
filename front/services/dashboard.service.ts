@@ -1,5 +1,5 @@
 import { fetchWithAuth,  } from "@/hooks/api";
-import { Analytics } from "./types";
+import { Analytics } from "@/types";
 
 export const listAnalytics = async (): Promise<Analytics> => {
     try {

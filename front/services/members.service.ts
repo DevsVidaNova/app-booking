@@ -1,5 +1,5 @@
 import { fetchWithAuth, } from "@/hooks/api";
-import { ListMember, CreateMember } from "./types";
+import { ListMember, CreateMember } from "@/types";
 
 export const listMembers = async (page: number): Promise<ListMember> => {
     try {
