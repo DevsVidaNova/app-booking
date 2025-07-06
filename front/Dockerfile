@@ -1,5 +1,5 @@
 # Etapa base com dependências essenciais
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 
 # Instalar dependências nativas
 RUN apk add --no-cache libc6-compat curl
