@@ -22,6 +22,7 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  /*
   async rewrites() {
     // Use variável de ambiente para API URL, com fallback para desenvolvimento
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -41,6 +42,7 @@ const nextConfig = {
       },
     ];
   },
+  */
 }
 
 mergeConfig(nextConfig, userConfig)
