@@ -19,6 +19,7 @@ import {
   TableCell,
 } from "@/components/ui/"
 import { MemberEditForm } from './member-edit';
+import { toast } from 'sonner';
 
 
 export function MemberList({ users, refetch, setpage, page }: { readonly users: ListMember, readonly refetch: () => void, readonly page: number, readonly setpage: (page: number) => void; }) {
@@ -32,8 +33,8 @@ export function MemberList({ users, refetch, setpage, page }: { readonly users: 
           </div>
         </div>
         <div className='mb-10'>
-          {users && <TableMembers users={users?.data} refetch={refetch} />}
-          <Pagination page={page} setpage={setpage} data={users} />
+          {users && <TableMembers users={users} refetch={refetch} />}
+          <Pagination page={page} setpage={setpage} data={users.data} hideText={false} />
         </div>
       </div>
       <div style={{ position: 'fixed', bottom: 50, left: '50%', transform: 'translateX(-50%)' }} className='justify-center items-center md:hidden'>
@@ -47,6 +48,7 @@ const CardMember = ({ user, refetch }: { readonly user: SingleMember, readonly r
   const handleExclude = async (id: string) => {
     try {
       await deleteMember(id)
+      toast.success('Membro excluído com sucesso')
       refetch()
     } catch (error: any) {
       console.log(error)
@@ -85,9 +87,8 @@ const CardMember = ({ user, refetch }: { readonly user: SingleMember, readonly r
   )
 }
 
-const TableMembers = ({ users, refetch, }: { readonly users: SingleMember[], readonly refetch: () => void }) => {
+const TableMembers = ({ users, refetch, }: { readonly users: ListMember, readonly refetch: () => void }) => {
   if (!users) return <p>Carregando...</p>
-
   return (
     <Card>
       <Table >
@@ -100,7 +101,7 @@ const TableMembers = ({ users, refetch, }: { readonly users: SingleMember[], rea
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users?.map((user: any) => (
+          {users?.data?.map((user: any) => (
             <CardMember user={user} refetch={refetch} key={user?.id} />
           ))}
         </TableBody>

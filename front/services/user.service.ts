@@ -41,13 +41,11 @@ export const showUser = async (id: string): Promise<ListUser> => {
     }
 };
 
-export const editUser = async (data: EditUser): Promise<EditUser> => {
+export const editUser = async (id: string, data: EditUser): Promise<EditUser> => {
+    console.log(data)
     try {
-        const res = await fetchWithAuth<EditUser>("/auth/edit/", {
-            method: "PUT", data: {
-                name: data.name, 
-                phone: data.phone
-            }
+        const res = await fetchWithAuth<EditUser>("/user/" + id, {
+            method: "PUT", data
         });
         return res;
     } catch (error) {

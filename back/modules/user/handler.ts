@@ -1,40 +1,28 @@
 import supabase from "@/config/supabaseClient";
-
-type UserProfile = {
-  id: string;
-  name: string;
-  phone: string;
-  role: string;
-  user_id: string;
-  email: string;
-};
-
-type CreateUserInput = {
-  name: string;
-  phone: string;
-  role?: string;
-  password: string;
-  email: string;
-};
-
-type UpdateUserInput = {
-  userId: string;
-  name?: string;
-  phone?: string;
-  email?: string;
-  role?: string;
-};
+import { UserProfile, CreateUserInput, UpdateUserInput, ResetPasswordInput } from "./types";
 
 type HandlerResult<T> = { data?: T; error?: string };
 
-export async function showUserHandler(id: string): Promise<HandlerResult<UserProfile>> {
+export async function showUserHandler(id: string): Promise<HandlerResult<UserProfile & { total_bookings: number }>> {
   const outputs = "id, name, phone, role, user_id, email";
   let query = supabase.from("user_profiles").select(outputs);
   const { data: user, error } = await query.eq("id", id).single();
   if (error || !user) {
     return { error: "Usuário não encontrado" };
   }
-  return { data: user };
+  
+  // Contar total de bookings do usuário
+  const { count: totalBookings, error: countError } = await supabase
+    .from("bookings")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id); // user_id é o id do usuário na tabela de bookings
+  
+  if (countError) {
+    console.error("Erro ao contar bookings:", countError);
+    return { data: { ...user, total_bookings: 0 } };
+  }
+  
+  return { data: { ...user, total_bookings: totalBookings || 0 } };
 }
 
 export async function listUsersHandler(page = 1, limit = 10): Promise<HandlerResult<{ data: UserProfile[]; total: number; page: number; totalPages: number; hasNext: boolean; hasPrev: boolean }>> {
@@ -62,7 +50,6 @@ export async function listUsersHandler(page = 1, limit = 10): Promise<HandlerRes
 }
 
 export async function deleteUserHandler(userId: string): Promise<HandlerResult<null>> {
-  // Verificar se o usuário existe
   const { data: existingUser } = await supabase
     .from('user_profiles')
     .select('id')
@@ -73,6 +60,18 @@ export async function deleteUserHandler(userId: string): Promise<HandlerResult<n
     return { error: 'Usuário não encontrado.' };
   }
   
+  // Excluir todos os bookings do usuário em cascata
+  const { error: bookingsError } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('user_id', userId);
+  
+  if (bookingsError) {
+    console.error('Erro ao excluir bookings do usuário:', bookingsError);
+    return { error: `Erro ao excluir reservas do usuário: ${bookingsError.message}` };
+  }
+  
+  // Excluir o perfil do usuário
   const { error: profileError } = await supabase
     .from('user_profiles')
     .delete()
@@ -80,10 +79,13 @@ export async function deleteUserHandler(userId: string): Promise<HandlerResult<n
   if (profileError) {
     return { error: profileError.message };
   }
+  
+  // Excluir o usuário da autenticação
   const { error: authError } = await supabase.auth.admin.deleteUser(userId);
   if (authError) {
     return { error: authError.message };
   }
+  
   return { data: null };
 }
 
@@ -170,6 +172,36 @@ export async function createUserHandler(input: CreateUserInput): Promise<Handler
     return { error: profileError.message || "Erro ao criar perfil." };
   }
   return { data: profile };
+}
+
+export async function resetUserPasswordHandler(input: ResetPasswordInput): Promise<HandlerResult<{ message: string }>> {
+  const { userId, defaultPassword = "123456" } = input;
+  
+  // Verificar se o usuário existe
+  const { data: existingUser } = await supabase
+    .from('user_profiles')
+    .select('id, email, name')
+    .eq('user_id', userId)
+    .single();
+    
+  if (!existingUser) {
+    return { error: 'Usuário não encontrado.' };
+  }
+  
+  // Resetar a senha usando a Admin API do Supabase
+  const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+    password: defaultPassword
+  });
+  
+  if (updateError) {
+    return { error: `Erro ao resetar senha: ${updateError.message}` };
+  }
+  
+  return { 
+    data: { 
+      message: `Senha resetada com sucesso para o usuário ${existingUser.name}. Nova senha: ${defaultPassword}` 
+    } 
+  };
 }
 
 export async function listUsersScaleHandler(): Promise<HandlerResult<UserProfile[]>> {

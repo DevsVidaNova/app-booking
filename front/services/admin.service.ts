@@ -1,5 +1,5 @@
 import { fetchWithAuth } from "@/hooks/api";
-import { EditUser, ListUser, CreateUser } from "@/types";
+import { EditUser, ListUser, CreateUser, User } from "@/types";
 
 export const createUser = async (data: CreateUser): Promise<CreateUser> => {
     try {
@@ -15,9 +15,9 @@ export const listUsers = async (page: number): Promise<ListUser> => {
         throw new Error(error instanceof Error ? error.message : 'An unknown error occurred');
     }
 };
-export const showUserById = async (id: string): Promise<ListUser> => {
+export const showUserById = async (id: string): Promise<User> => {
     try {
-        return await fetchWithAuth<ListUser>("/user/" + id, { method: "GET", });
+        return await fetchWithAuth<User>("/user/" + id, { method: "GET", });
     } catch (error) {
         throw new Error(error instanceof Error ? error.message : 'An unknown error occurred');
     }
@@ -38,3 +38,10 @@ export const excludeUserById = async (id: string) => {
     }
 };
 
+export const resetUserPassword = async (id: string) => {
+    try {
+        return await fetchWithAuth(`/user/${id}/reset-password`, { method: "PATCH" });
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'An unknown error occurred');
+    }
+};

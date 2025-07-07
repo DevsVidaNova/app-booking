@@ -10,21 +10,31 @@ import {
   getBookingMy,
   getBookingsByToday,
   getBookingsByWeek,
-  searchBookingsByDescription
+  getBookingsByMonth,
+  getBookingsByAll,
+  getBookingsOfCalendar,
+  searchBookingsByDescription,
 } from "./controller";
 
 const BookingRouter = Router();
 
 // 📍 Rotas
 BookingRouter.post("/", requireAuth, createBooking);
+
 BookingRouter.get("/", publicRoute, getBooking);
 BookingRouter.get("/my", requireAuth, getBookingMy);
+
+BookingRouter.get("/all", publicRoute, getBookingsByAll);
 BookingRouter.get("/today", publicRoute, getBookingsByToday);
 BookingRouter.get("/week", publicRoute, getBookingsByWeek);
+BookingRouter.get("/month", publicRoute, getBookingsByMonth);
+BookingRouter.get("/calendar", publicRoute, getBookingsOfCalendar);
+
 BookingRouter.get("/search", requireAuth, searchBookingsByDescription);
+BookingRouter.post("/filter", requireAuth, getBookingByFilter);
+
 BookingRouter.get("/:id", publicRoute, getBookingById);
 BookingRouter.put("/:id", requireAdmin, updateBooking);
 BookingRouter.delete("/:id", requireAuth, requireAdmin, deleteBooking);
-BookingRouter.post("/filter", requireAuth, getBookingByFilter);
 
 export default BookingRouter;

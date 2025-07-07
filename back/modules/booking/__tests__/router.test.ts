@@ -1,11 +1,11 @@
 import request from 'supertest';
 import express from 'express';
-import BookingRouter from './router';
-import * as controller from './controller';
-import { requireAuth, requireAdmin, publicRoute } from '../../config/middleware';
+import BookingRouter from '../router';
+import * as controller from '../controller';
+import { requireAuth, requireAdmin, publicRoute } from '@/config/middleware';
 
 // Mock dos middlewares
-jest.mock('../../config/middleware', () => ({
+jest.mock('@/config/middleware', () => ({
   requireAuth: jest.fn((req, res, next) => {
     req.user = { id: 'user-123' };
     req.profile = { id: 'profile-123' };
@@ -22,7 +22,7 @@ jest.mock('../../config/middleware', () => ({
 }));
 
 // Mock do controller
-jest.mock('./controller', () => ({
+jest.mock('../controller', () => ({
   createBooking: jest.fn((req, res) => res.status(201).json({ success: true })),
   getBooking: jest.fn((req, res) => res.status(200).json({ bookings: [] })),
   getBookingById: jest.fn((req, res) => res.status(200).json({ booking: {} })),

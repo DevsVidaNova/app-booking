@@ -1,5 +1,5 @@
 import 'dayjs/locale/pt.js';
-import * as handler from './handler';
+import * as handler from '../handler';
 import { Request, Response } from 'express';
 import supabaseClient from '@/config/supabaseClient';
 

@@ -2,68 +2,36 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import supabase from "@/config/supabaseClient";
 import translateError, { DatabaseError } from "@/utils/errors";
+import { 
+  MemberData, 
+  Member, 
+  HandlerResult, 
+  GetMembersParams, 
+  GetMembersResult, 
+  SearchByFilterParams, 
+  AnalyticsResult,
+  ALLOWED_SEARCH_FIELDS,
+  CHART_COLORS
+} from "./types";
+
 dayjs.extend(customParseFormat);
-
-export interface MemberData {
-  full_name: string;
-  birth_date: string;
-  gender: string;
-  cpf?: string;
-  rg?: string;
-  phone: string;
-  email: string;
-  street?: string;
-  number?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-  cep?: string;
-  mother_name?: string;
-  father_name?: string;
-  marital_status?: string;
-  has_children?: boolean;
-  children_count?: number;
-}
-
-export interface Member {
-  id: number;
-  full_name: string;
-  birth_date: string;
-  gender: string;
-  cpf?: string;
-  rg?: string;
-  phone: string;
-  email: string;
-  street?: string;
-  number?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-  cep?: string;
-  mother_name?: string;
-  father_name?: string;
-  marital_status?: string;
-  has_children?: boolean;
-  children_count?: number;
-}
-
-export interface HandlerResult<T = any> {
-  data?: T;
-  error?: string;
-}
 
 export async function createMemberHandler(memberData: MemberData): Promise<HandlerResult<Member>> {
   const { full_name, birth_date, gender, cpf, rg, phone, email, street, number, neighborhood, city, state, cep, mother_name, father_name, marital_status, has_children, children_count } = memberData;
+  
   if (!full_name || !birth_date || !gender || !phone || !email) {
     return { error: "Campos obrigatórios ausentes." };
   }
+  
   const formattedBirthDate = dayjs(birth_date, "DD/MM/YYYY").format("YYYY-MM-DD");
+  
   try {
     const { data, error } = await supabase
       .from("members")
       .insert([{ full_name, birth_date: formattedBirthDate, gender, cpf, rg, phone, email, street, number, neighborhood, city, state, cep, mother_name, father_name, marital_status, has_children, children_count }])
       .select()
       .single();
+    
     if (error) throw error;
     return { data };
   } catch (err) {
@@ -71,37 +39,26 @@ export async function createMemberHandler(memberData: MemberData): Promise<Handl
   }
 }
 
-export interface GetMembersParams {
-  page?: number;
-  limit?: number;
-}
-
-export interface GetMembersResult {
-  data: Member[];
-  total: number;
-  page: number;
-  to: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
-
-export async function getMembersHandler({ page = 1, limit = 10 }: GetMembersParams): Promise<HandlerResult<GetMembersResult>> {
+export async function getMembersHandler({ page = 1, limit = 10 }: GetMembersParams): Promise<any> {
   try {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
+    
     const { data, error, count } = await supabase
       .from("members")
       .select("*", { count: "exact" })
       .range(from, to);
+    
     if (error) return { error: error.message };
+    
     const formattedData = (data as Member[]).map(member => ({
       ...member,
       birth_date: dayjs(member.birth_date).format("DD/MM/YYYY")
     }));
+    
     const totalPages = Math.ceil((count || 0) / limit);
+    
     return {
-      data: {
         data: formattedData,
         total: count || 0,
         page,
@@ -109,7 +66,6 @@ export async function getMembersHandler({ page = 1, limit = 10 }: GetMembersPara
         totalPages,
         hasNext: page < totalPages,
         hasPrev: page > 1
-      }
     };
   } catch (err) {
     return { error: "" + err || "Erro ao buscar membros." };
@@ -119,6 +75,7 @@ export async function getMembersHandler({ page = 1, limit = 10 }: GetMembersPara
 export async function getMemberByIdHandler(id: number | string): Promise<HandlerResult<Member>> {
   try {
     const { data, error } = await supabase.from("members").select("*").eq("id", id).single();
+    
     if (error) return { error: "Membro não encontrado." };
     
     // Formatar data de nascimento para exibição
@@ -129,7 +86,7 @@ export async function getMemberByIdHandler(id: number | string): Promise<Handler
     
     return { data: formattedData };
   } catch (err) {
-    return { error: "" + err ||"Erro ao buscar membro." };
+    return { error: "" + err || "Erro ao buscar membro." };
   }
 }
 
@@ -138,6 +95,7 @@ export async function updateMemberHandler(id: number | string, updates: Partial<
     const formattedBirthDate = dayjs(updates.birth_date, "DD/MM/YYYY").format("YYYY-MM-DD");
     updates.birth_date = formattedBirthDate;
   }
+  
   try {
     const { data, error } = await supabase
       .from("members")
@@ -145,6 +103,7 @@ export async function updateMemberHandler(id: number | string, updates: Partial<
       .eq("id", id)
       .select()
       .single();
+    
     if (error) return { error: error.message };
     return { data };
   } catch (err) {
@@ -155,6 +114,7 @@ export async function updateMemberHandler(id: number | string, updates: Partial<
 export async function deleteMemberHandler(id: number | string): Promise<HandlerResult<{ message: string }>> {
   try {
     const { error } = await supabase.from("members").delete().eq("id", id);
+    
     if (error) return { error: error.message };
     return { data: { message: "Membro deletado com sucesso." } };
   } catch (err) {
@@ -169,6 +129,7 @@ export async function searchMemberHandler(full_name: string): Promise<HandlerRes
   
   try {
     const { data, error } = await supabase.from("members").select("*").ilike("full_name", `%${full_name}%`);
+    
     if (error) return { error: "Membro não encontrado." };
     
     // Formatar datas de nascimento para exibição
@@ -183,25 +144,19 @@ export async function searchMemberHandler(full_name: string): Promise<HandlerRes
   }
 }
 
-export interface SearchByFilterParams {
-  field: string;
-  value: any;
-  operator: string;
-}
-
 export async function searchByFilterHandler({ field, value, operator }: SearchByFilterParams): Promise<HandlerResult<Member[]>> {
   if (!field || value === undefined || !operator) {
     return { error: "Parâmetros inválidos." };
   }
   
   // Validar campos permitidos para busca
-  const allowedFields = ['full_name', 'gender', 'phone', 'email', 'city', 'state', 'marital_status', 'has_children'];
-  if (!allowedFields.includes(field)) {
+  if (!ALLOWED_SEARCH_FIELDS.includes(field as any)) {
     return { error: "Campo não permitido para busca." };
   }
   
   try {
     let query = supabase.from("members").select("*");
+    
     switch (operator) {
       case "eq": query = query.eq(field, value); break;
       case "neq": query = query.neq(field, value); break;
@@ -213,7 +168,9 @@ export async function searchByFilterHandler({ field, value, operator }: SearchBy
       case "ilike": query = query.ilike(field, value); break;
       default: return { error: "Operador inválido." };
     }
+    
     const { data, error } = await query;
+    
     if (error) return { error: "Nenhum resultado encontrado." };
     
     // Formatar datas de nascimento para exibição
@@ -228,12 +185,12 @@ export async function searchByFilterHandler({ field, value, operator }: SearchBy
   }
 }
 
-export async function getAnalyticsHandler(): Promise<HandlerResult<any>> {
+export async function getAnalyticsHandler(): Promise<HandlerResult<AnalyticsResult>> {
   try {
     const { data: members, error } = await supabase.from("members").select("*");
+    
     if (error) return { error: "Erro ao buscar membros." };
     
-    const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"];
     const totalMembers = members.length;
     
     // Estatísticas por Estado Civil
@@ -247,7 +204,7 @@ export async function getAnalyticsHandler(): Promise<HandlerResult<any>> {
       label: status,
       value: maritalStatusCount[status],
       percentage: ((maritalStatusCount[status] / totalMembers) * 100).toFixed(2),
-      fill: colors[index % colors.length],
+      fill: CHART_COLORS[index % CHART_COLORS.length],
     }));
     
     // Estatísticas por Gênero
@@ -260,7 +217,7 @@ export async function getAnalyticsHandler(): Promise<HandlerResult<any>> {
       label: gender,
       value: genderCount[gender],
       percentage: ((genderCount[gender] / totalMembers) * 100).toFixed(2),
-      fill: colors[index % colors.length],
+      fill: CHART_COLORS[index % CHART_COLORS.length],
     }));
     
     // Estatísticas por Quantidade de Filhos
@@ -274,7 +231,7 @@ export async function getAnalyticsHandler(): Promise<HandlerResult<any>> {
       label: `${count} filhos`,
       value: childrenCount[parseInt(count)],
       percentage: ((childrenCount[parseInt(count)] / totalMembers) * 100).toFixed(2),
-      fill: colors[index % colors.length],
+      fill: CHART_COLORS[index % CHART_COLORS.length],
     }));
     
     // Estatísticas por Faixa Etária
@@ -352,14 +309,11 @@ export async function getAnalyticsHandler(): Promise<HandlerResult<any>> {
       }
     };
   } catch (err) {
-    return { error: "" + err ||"Erro ao buscar estatísticas." };
+    return { error: "" + err || "Erro ao buscar estatísticas." };
   }
 }
 
 function getRandomColor(): string {
-  const colors = [
-    "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#FFB6C1", "#8A2BE2", "#7FFF00", "#FFD700"
-  ];
-  return colors[Math.floor(Math.random() * colors.length)];
+  return CHART_COLORS[Math.floor(Math.random() * CHART_COLORS.length)];
 }
 

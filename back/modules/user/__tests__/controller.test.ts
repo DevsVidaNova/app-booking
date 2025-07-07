@@ -1,9 +1,7 @@
 import { Request, Response } from 'express';
-import * as userController from './controller';
-import * as userHandler from './handler';
+import * as userController from '../controller';
+import * as userHandler from '../handler';
 
-// Mock do handler
-jest.mock('./handler');
 const mockHandler = userHandler as jest.Mocked<typeof userHandler>;
 
 // Mock do dayjs

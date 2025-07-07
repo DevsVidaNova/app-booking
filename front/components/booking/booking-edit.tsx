@@ -18,6 +18,10 @@ import { Pencil } from "lucide-react"
 import { BookingFormBase, BookingFormData } from './booking-form-base'
 import { editBooking } from "@/services/booking.service"
 import { ListBooking } from "@/types"
+import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+
+dayjs.extend(customParseFormat)
 
 interface BookingEditFormProps {
     booking: ListBooking
@@ -43,10 +47,24 @@ export function BookingEdit({ booking, refetch, isOpen = false, onClose }: Booki
         }
     }
 
+    // Converter data de DD/MM/YYYY para YYYY-MM-DD para o input date HTML
+    const formatDateForInput = (dateStr: string | null): string => {
+        if (!dateStr || dateStr === 'null') return '';
+        
+        // Tentar parsear nos formatos possíveis e converter para YYYY-MM-DD
+        const date = dayjs(dateStr, ['DD/MM/YYYY', 'YYYY-MM-DD'], true);
+        
+        if (date.isValid()) {
+            return date.format('YYYY-MM-DD');
+        }
+        
+        return '';
+    };
+
     const formDefaultValues: Partial<BookingFormData> = {
         description: booking.description,
         room_id: booking.room?.id?.toString() || '',
-        date: booking.date || '',
+        date: formatDateForInput(booking.date),
         start_time: booking.start_time,
         end_time: booking.end_time,
         repeat: booking.repeat || 'none',
@@ -58,14 +76,25 @@ export function BookingEdit({ booking, refetch, isOpen = false, onClose }: Booki
         setIsLoading(true)
         try {
             // Transformar os dados para o formato esperado pela API
+            // Converter data para DD/MM/YYYY (formato esperado pelo backend)
+            let formattedDate = null;
+            if (values.date && values.date.trim() !== '') {
+                const date = dayjs(values.date, ['YYYY-MM-DD', 'DD/MM/YYYY'], true);
+                
+                if (date.isValid()) {
+                    formattedDate = date.format('DD/MM/YYYY');
+                }
+            }
+
             const bookingData = {
                 description: values.description,
                 room_id: parseInt(values.room_id),
-                date: values.date,
+                date: formattedDate,
                 start_time: values.start_time,
                 end_time: values.end_time,
                 repeat: values.repeat === 'none' ? null : values.repeat,
             }
+            
             
             const response = await editBooking(booking.id.toString(), bookingData)
             if (response) {
@@ -105,7 +134,7 @@ export function BookingEdit({ booking, refetch, isOpen = false, onClose }: Booki
                         <DrawerHeader>
                             <DrawerTitle>Editar Reserva de Sala</DrawerTitle>
                             <DrawerDescription>
-                                Modifique os detalhes da reserva para {booking.room?.name || 'sala selecionada'}.
+                                Modifique os detalhes da reserva para {booking.room?.name || 'a sala selecionada'}.
                             </DrawerDescription>
                         </DrawerHeader>
                         

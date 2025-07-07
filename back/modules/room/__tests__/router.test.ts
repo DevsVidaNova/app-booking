@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express, { Request, Response, NextFunction } from 'express';
-import roomRouter from './router';
-import * as roomController from './controller';
+import roomRouter from '../router';
+import * as roomController from '../controller';
 
 // Mock do supabaseClient
 jest.mock('@/config/supabaseClient', () => ({
@@ -18,7 +18,7 @@ jest.mock('@/config/supabaseClient', () => ({
   }
 }));
 
-jest.mock('../../config/middleware', () => ({
+jest.mock('@/config/middleware', () => ({
   requireAuth: jest.fn((req: Request, res: Response, next: NextFunction) => {
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) {
@@ -45,7 +45,7 @@ jest.mock('../../config/middleware', () => ({
 }));
 
 // Importar os mocks para usar nos testes
-import { requireAdmin, publicRoute } from '../../config/middleware';
+import { requireAdmin, publicRoute } from '@/config/middleware';
 const mockRequireAdmin = requireAdmin as jest.MockedFunction<typeof requireAdmin>;
 const mockPublicRoute = publicRoute as jest.MockedFunction<typeof publicRoute>;
 
@@ -61,7 +61,7 @@ jest.mock('dayjs', () => {
   return mockDayjs;
 });
 
-jest.mock('./controller');
+jest.mock('../controller');
 const mockController = roomController as jest.Mocked<typeof roomController>;
 
 

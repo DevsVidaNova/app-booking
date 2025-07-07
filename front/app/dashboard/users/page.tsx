@@ -5,11 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ListUser, User } from "@/types";
-import { EllipsisVertical, Trash } from "lucide-react";
-import { excludeUserById, listUsers } from "@/services/admin.service";
+import { EllipsisVertical, KeyRound, Trash, Eye } from "lucide-react";
+import { excludeUserById, listUsers, resetUserPassword } from "@/services/admin.service";
 import { UserAddForm } from "@/components/user/user-add";
 import { UserEditForm } from "@/components/user/user-edit";
 import Pagination from "@/components/pagination";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function Users() {
   const [page, setpage] = useState(1);
@@ -61,6 +63,7 @@ const ListUsers = ({ users, refetch, setpage, page }: { users: ListUser; refetch
 const TableUsers = ({ users, refetch }: { users: User[]; refetch: () => void }) => {
   const [confirmation, setconfirmation] = useState("");
   const [openExclude, setOpenExclude] = useState(false);
+  const router = useRouter();
 
   const handleExclude = async (id: string, confirmation: string) => {
     if (confirmation !== "sim") {
@@ -68,6 +71,22 @@ const TableUsers = ({ users, refetch }: { users: User[]; refetch: () => void }) 
     }
     try {
       await excludeUserById(id);
+      refetch();
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  const handleResetPassword = async (id: string) => {
+    try {
+      await resetUserPassword(id);
+      toast.success("Senha resetada com sucesso", {
+        description: "A senha do usuário foi resetada com sucesso",
+        action: {
+          label: "Fechar",
+          onClick: () => {}
+        }
+      });
       refetch();
     } catch (error: any) {
       console.log(error);
@@ -89,14 +108,35 @@ const TableUsers = ({ users, refetch }: { users: User[]; refetch: () => void }) 
         </TableHeader>
         <TableBody>
           {users?.map(user => (
-            <TableRow key={user.email}>
-              <TableCell className="text-[12px] md:text-[18px] leading-none font-light text-neutral-600">{user.name}</TableCell>
-              <TableCell className="text-[12px] md:text-[18px] leading-none font-light text-neutral-600">{user.phone}</TableCell>
-              <TableCell className="text-wrap min-w-[60px] text-[12px] md:text-[18px] leading-none font-light text-neutral-600" style={{ wordBreak: "break-word" }}>
+            <TableRow key={user.email} className="cursor-pointer hover:bg-gray-50">
+              <TableCell 
+                className="text-[12px] md:text-[18px] leading-none font-light text-neutral-600"
+                onClick={() => router.push(`/dashboard/users/${user.id}`)}
+              >
+                {user.name}
+              </TableCell>
+              <TableCell 
+                className="text-[12px] md:text-[18px] leading-none font-light text-neutral-600"
+                onClick={() => router.push(`/dashboard/users/${user.id}`)}
+              >
+                {user.phone}
+              </TableCell>
+              <TableCell 
+                className="text-wrap min-w-[60px] text-[12px] md:text-[18px] leading-none font-light text-neutral-600" 
+                style={{ wordBreak: "break-word" }}
+                onClick={() => router.push(`/dashboard/users/${user.id}`)}
+              >
                 {user.email}
               </TableCell>
               <TableCell className="">
                 <div className=" md:flex hidden gap-3 flex-row ">
+                  <Button 
+                    variant="outline" 
+                    className="w-[38px] h-[42px] rounded-lg" 
+                    onClick={() => router.push(`/dashboard/users/${user.id}`)}
+                  >
+                    <Eye size={24} />
+                  </Button>
                   <Dialog open={openExclude} onOpenChange={setOpenExclude}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-[38px] h-[42px] rounded-lg">
@@ -119,14 +159,24 @@ const TableUsers = ({ users, refetch }: { users: User[]; refetch: () => void }) 
                     </DialogContent>
                   </Dialog>
                   <UserEditForm id={user.user_id} refetch={refetch} defaultValue={user} />
+                  <Button variant="outline" className="w-[38px] h-[42px] rounded-lg" onClick={() => handleResetPassword(user.user_id)}>
+                    <KeyRound size={24} />
+                  </Button>
                 </div>
                 <div className="block md:hidden">
                   <Popover>
                     <PopoverTrigger>
                       <EllipsisVertical size={24} />
                     </PopoverTrigger>
-                    <PopoverContent className="w-[144px] mr-4">
+                    <PopoverContent className="w-[200px] mr-4">
                       <div className="gap-2 flex flex-row items-center justify-center">
+                        <Button 
+                          variant="outline" 
+                          className="w-[38px] h-[42px] rounded-lg"
+                          onClick={() => router.push(`/dashboard/users/${user.id}`)}
+                        >
+                          <Eye size={24} />
+                        </Button>
                         <Dialog open={openExclude} onOpenChange={setOpenExclude}>
                           <DialogTrigger asChild>
                             <Button variant="outline" className="w-[38px] h-[42px] rounded-lg">
@@ -149,6 +199,9 @@ const TableUsers = ({ users, refetch }: { users: User[]; refetch: () => void }) 
                           </DialogContent>
                         </Dialog>
                         <UserEditForm id={user.user_id} refetch={refetch} defaultValue={user} />
+                        <Button variant="outline" className="w-[38px] h-[42px] rounded-lg" onClick={() => handleResetPassword(user.user_id)}>
+                          <KeyRound size={24} />
+                        </Button>
                       </div>
                     </PopoverContent>
                   </Popover>

@@ -20,7 +20,7 @@ import { AlignJustify, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { deleteToken } from "@/hooks/token";
 import Profile from "./dashboard/profile/page";
-
+import { Toaster, toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 import Image from "next/image";
 
@@ -35,6 +35,7 @@ export default function Home() {
   }
   return (
     <div className="bg-background ">
+      <Toaster />
       <div className="flex flex-row z-20  bg-[#ffffff30] backdrop-blur-xs justify-between px-4 py-2 border-b fixed w-screen">
         <div className='container mx-auto flex flex-row justify-between'>
           <Image src="/imgs/logo_black.png" alt="Vida Nova" className="w-[180px] z-20" width={180} height={50} style={{ marginLeft: -18, }} />

@@ -28,7 +28,7 @@ export type ListBooking = {
         name: string,
         size: string,
     },
-    date: string,
+    date: string | null,
     day_of_week: string,
 	month:string,
     start_time: string,
@@ -239,6 +239,7 @@ export type User = {
     user_id: string;
     phone: string;
     email: string;
+    total_bookings?: number;
 };
 
 export type EditUser = {

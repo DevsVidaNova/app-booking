@@ -6,8 +6,8 @@ import {
   updateRoom,
   deleteRoom,
   searchRoom
-} from './controller';
-import * as handler from './handler';
+} from '../controller';
+import * as handler from '../handler';
 
 // Mock do supabaseClient
 jest.mock('@/config/supabaseClient', () => ({
@@ -37,7 +37,7 @@ jest.mock('dayjs', () => {
 });
 
 // Mock do handler
-jest.mock('./handler');
+jest.mock('../handler');
 const mockHandler = handler as jest.Mocked<typeof handler>;
 
 describe('Room Controller', () => {

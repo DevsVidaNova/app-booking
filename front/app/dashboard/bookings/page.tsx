@@ -154,12 +154,12 @@ const BookingList = ({ data, refetch, }: { data: ListBooking[], refetch: () => v
                                     </div>
                                     <div className='flex-row flex gap-2 items-center opacity-70'>
                                         <User size={12} />
-                                        <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{user?.name.length > 16 ? user?.name.slice(0, 16) + '...' : user?.name}</span>
+                                        <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{user?.name?.length > 16 ? user?.name.slice(0, 16) + '...' : user?.name}</span>
                                     </div>
                                 </div>
                                 <div className='flex-row flex gap-2 items-center opacity-70'>
                                     <MapPin size={12} />
-                                    <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{room.name} - {description?.length > 24 ? description?.slice(0, 21) + '...' : description}</span>
+                                    <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{room?.name} - {description?.length > 24 ? description?.slice(0, 21) + '...' : description}</span>
                                 </div>
                             </div>
                         </div>

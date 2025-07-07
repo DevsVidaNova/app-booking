@@ -1,8 +1,8 @@
 import request from 'supertest';
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
-import UserRouter from './router';
-import * as userController from './controller';
+import UserRouter from '../router';
+import * as userController from '../controller';
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string };
@@ -11,7 +11,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Mock do controller
-jest.mock('./controller');
+jest.mock('../controller');
 const mockController = userController as jest.Mocked<typeof userController>;
 
 // Mock do middleware

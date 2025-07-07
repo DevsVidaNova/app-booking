@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import * as controller from './controller';
-import * as handler from './handler';
+import * as controller from '../controller';
+import * as handler from '../handler';
 
 // Mock do handler
-jest.mock('./handler', () => ({
+jest.mock('../handler', () => ({
   create: jest.fn(),
   getBooking: jest.fn(),
   getBookingById: jest.fn(),

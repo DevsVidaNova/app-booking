@@ -1,114 +1,28 @@
 import { Request, Response, NextFunction } from "express";
+import { z } from "zod";
 import * as handler from './handler';
-
-const normalizeTime = (time: string | undefined | null): string | null => {
-  if (!time) return null;
-  
-  // Remover espaços em branco
-  const cleanTime = time.trim();
-  
-  // Verificar se o formato básico está correto (H:M, HH:MM ou HH:MM:SS)
-  const timeRegex = /^([0-9]|[0-1][0-9]|2[0-3]):([0-9]|[0-5][0-9])(:([0-5][0-9]))?$/;
-  if (!timeRegex.test(cleanTime)) {
-    return null; // Horário inválido
-  }
-  
-  const parts = cleanTime.split(":");
-  const hours = parseInt(parts[0], 10);
-  const minutes = parseInt(parts[1], 10);
-  const seconds = parts[2] ? parseInt(parts[2], 10) : 0;
-  
-  // Validar ranges
-  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
-    return null; // Horário inválido
-  }
-  
-  // Formatar com zero à esquerda e adicionar segundos se necessário
-  const formattedHours = hours.toString().padStart(2, '0');
-  const formattedMinutes = minutes.toString().padStart(2, '0');
-  const formattedSeconds = seconds.toString().padStart(2, '0');
-  
-  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-};
-
-// Função para validar se um horário é válido
-const isValidTime = (time: string | undefined | null): boolean => {
-  return normalizeTime(time) !== null;
-};
+import { createBookingSchema, updateBookingSchema } from './schema';
 
 // 📌 1. Criar uma nova reserva
 export const createBooking = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-  const { description, room, date, start_time, end_time, repeat, day_repeat } = req.body;
-  
-  // 🔧 CORREÇÃO: Validações mais robustas
-  // Validar campos obrigatórios
-  if (!description || typeof description !== 'string' || description.trim() === '') {
-    res.status(400).json({ error: 'Descrição é obrigatória e deve ser um texto válido.' });
-    return;
-  }
-  
-  if (!room || typeof room !== 'string' || room.trim() === '') {
-    res.status(400).json({ error: 'Sala é obrigatória e deve ser um texto válido.' });
-    return;
-  }
-  
-  if (!start_time || !end_time) {
-    res.status(400).json({ error: 'Horários de início e fim são obrigatórios.' });
-    return;
-  }
-  
-  // 🔧 VALIDAÇÃO ROBUSTA: Verificar se os horários são válidos
-  if (!isValidTime(start_time)) {
-    res.status(400).json({ error: 'Horário de início inválido. Use o formato HH:MM (ex: 09:30, 14:00). Horários devem estar entre 00:00 e 23:59.' });
-    return;
-  }
-  
-  if (!isValidTime(end_time)) {
-    res.status(400).json({ error: 'Horário de fim inválido. Use o formato HH:MM (ex: 10:30, 15:00). Horários devem estar entre 00:00 e 23:59.' });
-    return;
-  }
-  
-  const formattedStartTime = normalizeTime(start_time);
-  const formattedEndTime = normalizeTime(end_time);
-  
-  // Validar lógica de horários (já sabemos que são válidos pelas verificações anteriores)
-  if (formattedStartTime && formattedEndTime && formattedStartTime >= formattedEndTime) {
-    res.status(400).json({ error: 'Horário de início deve ser anterior ao horário de fim.' });
-    return;
-  }
-  
-  // Validar recorrência
-  const validRepeats = ['none', 'day', 'week', 'month', null, undefined];
-  if (repeat && !validRepeats.includes(repeat)) {
-    res.status(400).json({ error: 'Tipo de recorrência inválido. Use: none, day, week ou month.' });
-    return;
-  }
-  
-  // Validar data para reservas não recorrentes
-  if ((!repeat || repeat === 'none' || repeat === 'null') && !date) {
-    res.status(400).json({ error: 'Data é obrigatória para reservas não recorrentes.' });
-    return;
-  }
-  
-  // Validar day_repeat para recorrências
-  if (repeat && repeat !== 'none' && repeat !== 'null') {
-    if (repeat === 'day' || repeat === 'week') {
-      if (day_repeat === undefined || day_repeat < 0 || day_repeat > 6) {
-        res.status(400).json({ error: 'Para recorrência diária/semanal, day_repeat deve ser entre 0-6 (domingo-sábado).' });
-        return;
-      }
-    } else if (repeat === 'month') {
-      if (day_repeat === undefined || day_repeat < 1 || day_repeat > 31) {
-        res.status(400).json({ error: 'Para recorrência mensal, day_repeat deve ser entre 1-31 (dia do mês).' });
-        return;
-      }
-    }
-  }
-
+  // 🔧 VALIDAÇÃO ZOD: Validar dados de entrada
   try {
+    const validatedData = createBookingSchema.parse(req.body);
+    
     const user = (req as any).profile || { id: (req as any).user?.id };
-    await handler.create(user, req.body, res);
+    await handler.create(user, validatedData, res);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        error: "Dados inválidos",
+        details: error.errors.map((err: z.ZodIssue) => ({
+          field: err.path.join('.'),
+          message: err.message
+        }))
+      });
+      return;
+    }
+    
     console.error('Erro ao criar reserva:', error);
     res.status(500).json({ error: 'Erro interno do servidor ao criar reserva.' });
   }
@@ -131,64 +45,28 @@ export async function updateBooking(req: Request, res: Response): Promise<void> 
     return;
   }
   
-  // 🔧 CORREÇÃO: Validações para atualização
-  const { description, room, start_time, end_time, repeat, day_repeat } = req.body;
-  
-  // Validar tipos de dados se fornecidos
-  if (description !== undefined && (typeof description !== 'string' || description.trim() === '')) {
-    res.status(400).json({ error: 'Descrição deve ser um texto válido.' });
-    return;
-  }
-  
-  if (room !== undefined && (typeof room !== 'string' || room.trim() === '')) {
-    res.status(400).json({ error: 'Sala deve ser um texto válido.' });
-    return;
-  }
-  
-  // 🔧 VALIDAÇÃO ROBUSTA: Validar horários se fornecidos
-  if (start_time !== undefined || end_time !== undefined) {
-    if (start_time !== undefined && !isValidTime(start_time)) {
-      res.status(400).json({ error: 'Horário de início inválido. Use o formato HH:MM (ex: 09:30, 14:00). Horários devem estar entre 00:00 e 23:59.' });
+  // 🔧 VALIDAÇÃO ZOD: Validar dados de entrada
+  try {
+    const validatedData = updateBookingSchema.parse(req.body);
+    
+    // Adicionar dados validados de volta ao req.body para manter compatibilidade
+    req.body = validatedData;
+    
+    return handler.updateBooking(req, res);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        error: "Dados inválidos",
+        details: error.errors.map((err: z.ZodIssue) => ({
+          field: err.path.join('.'),
+          message: err.message
+        }))
+      });
       return;
     }
     
-    if (end_time !== undefined && !isValidTime(end_time)) {
-      res.status(400).json({ error: 'Horário de fim inválido. Use o formato HH:MM (ex: 10:30, 15:00). Horários devem estar entre 00:00 e 23:59.' });
-      return;
-    }
-    
-    // Se ambos os horários estão sendo atualizados, validar lógica
-    const formattedStartTime = start_time ? normalizeTime(start_time) : null;
-    const formattedEndTime = end_time ? normalizeTime(end_time) : null;
-    
-    if (formattedStartTime && formattedEndTime && formattedStartTime >= formattedEndTime) {
-      res.status(400).json({ error: 'Horário de início deve ser anterior ao horário de fim.' });
-      return;
-    }
+    res.status(500).json({ error: 'Erro interno do servidor.' });
   }
-  
-  // Validar recorrência se fornecida
-  if (repeat !== undefined) {
-    const validRepeats = ['none', 'day', 'week', 'month', null];
-    if (repeat && !validRepeats.includes(repeat)) {
-      res.status(400).json({ error: 'Tipo de recorrência inválido. Use: none, day, week ou month.' });
-      return;
-    }
-  }
-  
-  // Validar day_repeat se fornecido
-  if (day_repeat !== undefined && repeat !== undefined && repeat !== 'none' && repeat !== null) {
-    if ((repeat === 'day' || repeat === 'week') && (day_repeat < 0 || day_repeat > 6)) {
-      res.status(400).json({ error: 'Para recorrência diária/semanal, day_repeat deve ser entre 0-6.' });
-      return;
-    }
-    if (repeat === 'month' && (day_repeat < 1 || day_repeat > 31)) {
-      res.status(400).json({ error: 'Para recorrência mensal, day_repeat deve ser entre 1-31.' });
-      return;
-    }
-  }
-  
-  return handler.updateBooking(req, res);
 }
 
 // 📌 5. Deletar reserva
@@ -216,7 +94,21 @@ export async function getBookingsByWeek(req: Request, res: Response): Promise<vo
   return handler.getBookingsByWeek(req, res);
 }
 
-// 📌 10. Buscar reservas por descrição
+// 📌 10. Listar reservas para mês
+export async function getBookingsByMonth(req: Request, res: Response): Promise<void> {
+  await handler.getBookingsByMonth(req, res);
+}
+
+// 📌 11. Listar reservas para calendário
+export async function getBookingsOfCalendar(req: Request, res: Response): Promise<void> {
+  await handler.getBookingsOfCalendar(req, res);
+}
+
+export async function getBookingsByAll(req: Request, res: Response): Promise<void> {
+  await handler.getBookingsByAll(req, res);
+}
+
+// 📌 12. Buscar reservas por descrição
 export async function searchBookingsByDescription(req: Request, res: Response): Promise<void> {
   await handler.searchBookingsByDescription(req, res);
 }

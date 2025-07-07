@@ -4,14 +4,16 @@ import { useCallback, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Button, Input, Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose, Message, Form, FormControl, FormField, FormItem, Checkbox, FormMessage, FormLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/";
+import { Button, Input, Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose, Message, Form, FormControl, FormField, FormItem, Checkbox, FormMessage, FormLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/";
 import { addMember } from "@/services/members.service";
 import { Check } from "lucide-react";
 
 const formSchema = z.object({
   full_name: z.string().min(2, "O nome completo deve ter pelo menos 2 caracteres."),
   birth_date: z.string().nonempty("A data de nascimento é obrigatória."),
-  gender: z.enum(["Masculino", "Feminino", "Outro"]),
+  gender: z.enum(["Masculino", "Feminino", "Outro"], {
+    errorMap: () => ({ message: "Selecione um gênero." })
+  }),
   cpf: z.string().nonempty("O CPF é obrigatório."),
   rg: z.string().nonempty("O RG é obrigatório."),
   phone: z.string().nonempty("O número de telefone é obrigatório."),
@@ -24,7 +26,9 @@ const formSchema = z.object({
   cep: z.string().nonempty("O CEP é obrigatório."),
   mother_name: z.string().nonempty("O nome da mãe é obrigatório."),
   father_name: z.string().nonempty("O nome do pai é obrigatório."),
-  marital_status: z.enum(["Solteiro", "Casado", "Viúvo", "Divorciado"]),
+  marital_status: z.enum(["Solteiro", "Casado", "Viúvo", "Divorciado"], {
+    errorMap: () => ({ message: "Selecione um estado civil." })
+  }),
   has_children: z.boolean(),
   children_count: z.number().min(0, "A quantidade de filhos não pode ser negativa.").default(0)
 });
@@ -35,29 +39,69 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
   const [success, setSuccess] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema)
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      has_children: false,
+      children_count: 0
+    }
   });
 
-  const handleCEP = useCallback(() => {
-    const cep = form.getValues("cep");
+  const cepValue = form.watch("cep");
+
+  const handleCEP = useCallback(async (cep: string) => {
     if (cep?.length === 8) {
-      fetch(`https://viacep.com.br/ws/${cep}/json/`)
-        .then(response => response.json())
-        .then(data => {
-          form.setValue("street", data.logradouro);
-          form.setValue("neighborhood", data.bairro);
-          form.setValue("city", data.localidade);
-          form.setValue("state", data.uf);
-        })
-        .catch(error => {
-          console.error(error);
-        });
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        
+        if (data && !data.erro) {
+          form.setValue("street", data.logradouro || "");
+          form.setValue("neighborhood", data.bairro || "");
+          form.setValue("city", data.localidade || "");
+          form.setValue("state", data.uf || "");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar CEP:", error);
+      }
     }
   }, [form]);
 
   useEffect(() => {
-    handleCEP();
-  }, [form, handleCEP]);
+    if (cepValue) {
+      handleCEP(cepValue);
+    }
+  }, [cepValue, handleCEP]);
+
+  // Função para validar cada step
+  const validateStep = async (stepNumber: number) => {
+    let fieldsToValidate: (keyof z.infer<typeof formSchema>)[] = [];
+    
+    switch (stepNumber) {
+      case 1:
+        fieldsToValidate = ['full_name', 'birth_date', 'gender', 'phone', 'email', 'rg', 'cpf'];
+        break;
+      case 2:
+        fieldsToValidate = ['cep', 'state', 'city', 'neighborhood', 'street', 'number'];
+        break;
+      case 3:
+        fieldsToValidate = ['mother_name', 'father_name', 'marital_status'];
+        break;
+      default:
+        return true;
+    }
+
+    const isValid = await form.trigger(fieldsToValidate);
+    
+    // Scroll para o primeiro erro se houver
+    if (!isValid) {
+      const firstError = document.querySelector('.text-red-500, [data-invalid]');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+    
+    return isValid;
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError("");
@@ -67,10 +111,11 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
       if (res) {
         setSuccess(res.message);
         form.reset();
+        setStep(1);
         refetch();
       }
     } catch (error: any) {
-      setError(error.message);
+      setError(error.message || "Erro ao criar membro. Tente novamente.");
     }
   }
 
@@ -79,12 +124,28 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
   const handlePrevious = () => {
     if (step === 1) return;
     setStep(step - 1);
+    setError("");
   };
-  const handleNext = () => {
+
+  const handleNext = async () => {
+    setError("");
+    
     if (step === 3) {
+      // Validar step 3 antes de submeter
+      const isValid = await validateStep(3);
+      if (!isValid) {
+        setError("Por favor, preencha todos os campos obrigatórios antes de finalizar.");
+        return;
+      }
       form.handleSubmit(onSubmit)();
       return;
     } else if (step < 3) {
+      // Validar step atual antes de avançar
+      const isValid = await validateStep(step);
+      if (!isValid) {
+        setError("Por favor, preencha todos os campos obrigatórios antes de continuar.");
+        return;
+      }
       setStep(step + 1);
     }
   };
@@ -113,7 +174,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                       render={({ field }) => (
                         <FormItem className="w-1/2">
                           <FormControl>
-                            <Input label="Nome Completo" placeholder="Nome completo" {...field} />
+                            <Input label="Nome Completo*" placeholder="Nome completo" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -125,11 +186,11 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                       render={({ field }) => (
                         <FormItem className="w-1/2">
                           <div>
-                            <FormLabel className="mb-4">Gênero</FormLabel>
+                            <FormLabel className="mb-4">Gênero*</FormLabel>
                           </div>
                           <FormControl>
                             <Select {...field} value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger className="w-1/2">
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Selecione o Gênero" />
                               </SelectTrigger>
                               <SelectContent>
@@ -152,7 +213,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                         <FormItem className="w-1/2">
                           <FormControl>
                             <Input
-                              label="Data de nascimento"
+                              label="Data de nascimento*"
                               placeholder="DD/MM/AAAA"
                               maxLength={10}
                               {...field}
@@ -177,7 +238,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                         <FormItem className="w-1/2">
                           <FormControl>
                             <Input
-                              label="Telefone"
+                              label="Telefone*"
                               placeholder="(47) 99123-4567"
                               {...field}
                               onChange={e => {
@@ -201,7 +262,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="E-mail" placeholder="E-mail" {...field} />
+                          <Input label="E-mail*" placeholder="E-mail" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -218,7 +279,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                             <Input
                               placeholder="12.345.678-9"
                               {...field}
-                              label="RG"
+                              label="RG*"
                               maxLength={12}
                               onChange={e => {
                                 const value = e.target.value
@@ -245,7 +306,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                               placeholder="123.456.789-01"
                               {...field}
                               maxLength={14}
-                              label="CPF"
+                              label="CPF*"
                               onChange={e => {
                                 const value = e.target.value
                                   .replace(/\D/g, "")
@@ -272,7 +333,16 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                       render={({ field }) => (
                         <FormItem className="w-1/2">
                           <FormControl>
-                            <Input label="CEP" placeholder="XXXXXXXX" maxLength={8} {...field} />
+                            <Input 
+                              label="CEP*" 
+                              placeholder="12345678" 
+                              maxLength={8} 
+                              {...field}
+                              onChange={e => {
+                                const value = e.target.value.replace(/\D/g, "");
+                                field.onChange(value);
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -285,7 +355,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                       render={({ field }) => (
                         <FormItem className="w-1/2">
                           <FormControl>
-                            <Input label="Estado" placeholder="Estado" {...field} />
+                            <Input label="Estado*" placeholder="Estado" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -298,7 +368,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="Cidade" placeholder="Cidade" {...field} />
+                          <Input label="Cidade*" placeholder="Cidade" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -311,7 +381,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="Bairro" placeholder="Bairro" {...field} />
+                          <Input label="Bairro*" placeholder="Bairro" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -324,7 +394,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                       render={({ field }) => (
                         <FormItem className="w-1/2">
                           <FormControl>
-                            <Input label="Endereço" placeholder="Rua" {...field} />
+                            <Input label="Endereço*" placeholder="Rua" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -336,7 +406,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                       render={({ field }) => (
                         <FormItem className="w-1/2">
                           <FormControl>
-                            <Input label="Número" placeholder="Número" {...field} />
+                            <Input label="Número*" placeholder="Número" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -353,7 +423,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="Nome da Mãe" placeholder="Nome da Mãe" {...field} />
+                          <Input label="Nome da Mãe*" placeholder="Nome da Mãe" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -366,7 +436,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input label="Nome do Pai" placeholder="Nome do Pai" {...field} />
+                          <Input label="Nome do Pai*" placeholder="Nome do Pai" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -380,11 +450,11 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                       render={({ field }) => (
                         <FormItem className="w-1/2">
                           <div>
-                            <FormLabel className="mb-4">Estado Cívil</FormLabel>
+                            <FormLabel className="mb-4">Estado Civil*</FormLabel>
                           </div>
                           <FormControl>
                             <Select {...field} value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger className="w-1/2">
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Selecione" />
                               </SelectTrigger>
                               <SelectContent>
@@ -427,14 +497,14 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
                         <FormItem>
                           <FormControl>
                             <Input
-                              label="Quantidade de filhos"
+                              label="Quantidade de filhos*"
                               placeholder="2"
                               {...field}
                               maxLength={2}
                               type="number"
                               onChange={e => {
                                 const value = parseInt(e.target.value, 10);
-                                field.onChange(value);
+                                field.onChange(isNaN(value) ? 0 : value);
                               }}
                             />
                           </FormControl>
@@ -448,11 +518,20 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
 
               <Message success={success} error={error} />
               <div className="flex gap-2 pt-6 mt-6 border-t">
-                <Button onClick={handlePrevious} className="w-full bg-black">
+                <Button 
+                  type="button"
+                  onClick={handlePrevious} 
+                  className="w-full bg-black"
+                  disabled={step === 1}
+                >
                   Voltar
                 </Button>
-                <Button onClick={handleNext} className="w-full">
-                  Próximo
+                <Button 
+                  type="button"
+                  onClick={handleNext} 
+                  className="w-full"
+                >
+                  {step === 3 ? 'Finalizar' : 'Próximo'}
                 </Button>
               </div>
             </form>

@@ -1,5 +1,5 @@
-import * as handler from './handler';
-import { UpdateRoomInput } from './handler';
+import * as handler from '../handler';
+import { UpdateRoomInput } from '../types';
 
 // Mock do dayjs
 jest.mock('dayjs', () => {
@@ -16,40 +16,6 @@ jest.mock('dayjs', () => {
     default: mockDayjs
   };
 });
-
-// Mock do Supabase
-jest.mock('../../config/supabaseClient', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn().mockReturnValue({
-      insert: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: { id: '1', name: 'Test Room' }, error: null })
-        })
-      }),
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: null, error: null }),
-          neq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: null, error: null })
-          })
-        }),
-        range: jest.fn().mockResolvedValue({ data: [{ id: '1', name: 'Test Room' }], error: null, count: 1 }),
-        ilike: jest.fn().mockResolvedValue({ data: [{ id: '1', name: 'Test Room' }], error: null })
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: { id: '1', name: 'Updated Room' }, error: null })
-          })
-        })
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ data: null, error: null })
-      })
-    })
-  }
-}));
 
 jest.mock('@/config/supabaseClient', () => ({
   __esModule: true,
