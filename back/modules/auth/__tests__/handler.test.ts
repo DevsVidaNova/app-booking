@@ -5,7 +5,7 @@ import {
   updateUserProfileHandler,
   deleteUserHandler,
   logoutHandler,
-} from "./handler";
+} from "../handler";
 
 const mockAnonClient = {
   auth: {

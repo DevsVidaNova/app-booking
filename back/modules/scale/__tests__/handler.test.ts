@@ -1,5 +1,5 @@
-import * as handler from './handler';
-import { ScaleInput } from './handler';
+import * as handler from '../handler';
+import { ScaleInput } from '../types';
 
 // Mock do dayjs
 jest.mock('dayjs', () => {

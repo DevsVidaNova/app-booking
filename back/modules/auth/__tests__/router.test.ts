@@ -1,11 +1,11 @@
 import request from 'supertest';
 import express from 'express';
-import AuthRouter from './router';
-import * as controller from './controller';
+import AuthRouter from '../router';
+import * as controller from '../controller';
 import * as middleware from '@/config/middleware';
 
 // Mock do controller
-jest.mock('./controller');
+jest.mock('../controller');
 const mockController = controller as jest.Mocked<typeof controller>;
 
 // Mock do middleware

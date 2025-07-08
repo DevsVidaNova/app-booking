@@ -1,54 +1,9 @@
-// Funções puras de acesso ao banco de dados para escala
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import supabase from "@/config/supabaseClient";
+import { ScaleInput, Scale } from "./types";
+
 dayjs.extend(customParseFormat);
-
-export interface ScaleInput {
-  date: string;
-  band?: string;
-  name: string;
-  projection?: string;
-  light?: string;
-  transmission?: string;
-  camera?: string;
-  live?: string;
-  sound?: string;
-  training_sound?: string;
-  photography?: string;
-  stories?: string;
-  dynamic?: string;
-  direction: string;
-}
-
-interface DirectionData {
-  id: string;
-  full_name: string;
-}
-
-interface BandData {
-  id: string;
-  full_name: string;
-}
-
-export interface Scale {
-  id: string;
-  date: string;
-  name: string;
-  description?: string;
-  direction?: DirectionData;
-  band?: BandData;
-  projection?: string;
-  light?: string;
-  transmission?: string;
-  camera?: string;
-  live?: string;
-  sound?: string;
-  training_sound?: string;
-  photography?: string;
-  stories?: string;
-  dynamic?: string;
-}
 
 export interface HandlerResult<T> {
   data?: T;

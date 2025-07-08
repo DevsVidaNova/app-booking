@@ -1,5 +1,5 @@
-import { getStats } from './controller';
-import * as handler from './handler';
+import { getStats } from '../controller';
+import * as handler from '../handler';
 
 // Mock do handler
 jest.mock('./handler');

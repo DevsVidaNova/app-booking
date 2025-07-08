@@ -75,7 +75,6 @@ describe('User Handler', () => {
       const createInput = {
         name: 'João Silva',
         phone: '11999999999',
-        role: 'user',
         password: 'password123',
         email: 'joao@example.com'
       };

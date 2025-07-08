@@ -66,7 +66,7 @@ describe('Room Handler', () => {
         size: 10,
         description: 'Sala para reuniões',
         exclusive: false,
-        status: 'ativa'
+        status: true
       };
 
       const result = await handler.createRoomHandler(roomData);

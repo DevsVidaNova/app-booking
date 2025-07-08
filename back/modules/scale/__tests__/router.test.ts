@@ -1,9 +1,9 @@
 import request from 'supertest';
 import express from 'express';
-import ScaleRouter from './router';
-import * as controller from './controller';
+import ScaleRouter from '../router';
+import * as controller from '../controller';
 import { requireAdmin, requireAuth } from '@/config/middleware';
-jest.mock('./controller');
+jest.mock('../controller');
 const mockController = controller as jest.Mocked<typeof controller>;
 
 // Mock dos middlewares

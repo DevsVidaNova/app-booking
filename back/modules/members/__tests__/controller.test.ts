@@ -6,9 +6,9 @@ import {
   deleteMember,
   searchMember,
   searchByFilter,
-} from './controller';
-import * as handler from './handler';
-jest.mock('./handler');
+} from '../controller';
+import * as handler from '../handler';
+jest.mock('../handler');
 jest.mock('@/config/supabaseClient');
 
 const mockHandler = handler as jest.Mocked<typeof handler>;

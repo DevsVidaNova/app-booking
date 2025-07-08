@@ -1,5 +1,5 @@
 import * as handler from '../handler';
-import { MemberData, SearchByFilterParams } from '../handler';
+import { MemberData, SearchByFilterParams } from '../types';
 
 // Mock do dayjs
 jest.mock('dayjs', () => {

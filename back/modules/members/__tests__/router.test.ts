@@ -1,11 +1,11 @@
 import request from 'supertest';
 import express from 'express';
-import MembersRouter from './router';
-import * as controller from './controller';
+import MembersRouter from '../router';
+import * as controller from '../controller';
 import { requireAdmin } from '@/config/middleware';
 
 // Mock do controller e middleware
-jest.mock('./controller');
+jest.mock('../controller');
 jest.mock('@/config/middleware');
 
 const mockController = controller as jest.Mocked<typeof controller>;

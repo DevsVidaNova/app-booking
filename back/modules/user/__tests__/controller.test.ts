@@ -48,7 +48,8 @@ describe('User Controller', () => {
         phone: '123456789',
         role: 'user',
         user_id: 'user1',
-        email: 'user1@test.com'
+        email: 'user1@test.com',
+        total_bookings: 0
       };
       
       mockReq.params = { id: '1' };

@@ -6,11 +6,11 @@ import {
   deleteScale,
   searchScale,
   duplicateScale
-} from './controller';
-import * as handler from './handler';
+} from '../controller';
+import * as handler from '../handler';
 
 // Mock do handler
-jest.mock('./handler');
+jest.mock('../handler');
 const mockHandler = handler as jest.Mocked<typeof handler>;
 
 describe('Scale Controller', () => {

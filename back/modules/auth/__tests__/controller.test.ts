@@ -1,8 +1,8 @@
-import { signUpUser, loginUser, getUserProfile, deleteUser, logout } from './controller';
-import * as handler from './handler';
+import { signUpUser, loginUser, getUserProfile, deleteUser, logout } from '../controller';
+import * as handler from '../handler';
 
 // Mock do handler
-jest.mock('./handler', () => ({
+jest.mock('../handler', () => ({
   signUpUserHandler: jest.fn(),
   loginUserHandler: jest.fn(),
   getUserProfileHandler: jest.fn(),

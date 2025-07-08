@@ -8,8 +8,8 @@ import {
   deleteScaleHandler,
   searchScaleHandler,
   duplicateScaleHandler,
-  ScaleInput
 } from "./handler";
+import { ScaleInput } from "./types";
 dayjs.extend(customParseFormat);
 
 export async function createScale(req: any, res: any) {

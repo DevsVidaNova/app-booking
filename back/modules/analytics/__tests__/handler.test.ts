@@ -1,4 +1,4 @@
-import * as handler from './handler';
+import * as handler from '../handler';
 
 // Mock do dayjs
 jest.mock('dayjs', () => {
