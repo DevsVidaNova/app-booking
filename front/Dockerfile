@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# Atualiza os pacotes do sistema e instala dumb-init e curl
+RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
+
 # Diretório da aplicação
 WORKDIR /app
 
