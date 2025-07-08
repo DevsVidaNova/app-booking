@@ -184,12 +184,12 @@ const UserDetailsContent = ({ user, refetch, onBack }: { user: User; refetch: ()
                 <DialogTitle>Excluir usuário</DialogTitle>
                 <DialogDescription>
                   Tem certeza que quer excluir o usuário <strong>{user.name}</strong>? 
-                  Esta ação não pode ser desfeita. Digite "sim" para confirmar.
+                  Esta ação não pode ser desfeita. Digite sim para confirmar.
                 </DialogDescription>
                 <Input 
                   id="confirmation" 
                   label="Confirmação" 
-                  placeholder="Digite 'sim' para confirmar" 
+                  placeholder="Digite sim para confirmar" 
                   value={confirmation} 
                   onChange={e => setconfirmation(e.target.value)} 
                 />

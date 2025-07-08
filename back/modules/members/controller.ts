@@ -16,12 +16,6 @@ import {
   searchMemberSchema,
   searchByFilterSchema,
   idSchema,
-  CreateMemberInput,
-  UpdateMemberInput,
-  GetMembersInput,
-  SearchMemberInput,
-  SearchByFilterInput,
-  IdInput
 } from "./schemas";
 
 // Função auxiliar para lidar com erros de validação
@@ -171,7 +165,7 @@ export async function searchByFilter(req: any, res: any) {
 }
 
 // 📌 8. Listar estatísticas
-export async function getAnalytics(req: any, res: any) {
+export async function getAnalytics(_req: any, res: any) {
   try {
     const result = await getAnalyticsHandler();
     

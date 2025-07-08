@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { Gender, MaritalStatus, SearchOperator, VALID_OPERATORS } from './types';
 
 // Schema para validar CPF
 const cpfSchema = z.string()
