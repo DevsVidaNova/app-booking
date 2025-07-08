@@ -175,7 +175,7 @@ export async function getAnalytics(_req: any, res: any) {
     
     res.json(result.data);
   } catch (error) {
-    res.status(500).json({ error: 'Erro interno do servidor.' });
+    res.status(500).json({ error: error || 'Erro interno do servidor.' });
   }
 }
 

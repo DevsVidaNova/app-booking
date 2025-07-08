@@ -7,7 +7,6 @@ import {
   Member, 
   HandlerResult, 
   GetMembersParams, 
-  GetMembersResult, 
   SearchByFilterParams, 
   AnalyticsResult,
   ALLOWED_SEARCH_FIELDS,

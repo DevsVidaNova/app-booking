@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+dayjs.extend(customParseFormat);
 
 // Schema para validar CPF
 const cpfSchema = z.string()
@@ -20,17 +23,11 @@ const emailSchema = z.string()
 const birthDateSchema = z.string()
   .regex(/^\d{2}\/\d{2}\/\d{4}$/, { message: 'Data de nascimento deve estar no formato DD/MM/YYYY.' })
   .refine(val => {
-    const dayjs = require('dayjs');
-    const customParseFormat = require('dayjs/plugin/customParseFormat');
-    dayjs.extend(customParseFormat);
     
     const parsedDate = dayjs(val, 'DD/MM/YYYY', true);
     return parsedDate.isValid();
   }, { message: 'Data de nascimento inválida.' })
   .refine(val => {
-    const dayjs = require('dayjs');
-    const customParseFormat = require('dayjs/plugin/customParseFormat');
-    dayjs.extend(customParseFormat);
     
     const parsedDate = dayjs(val, 'DD/MM/YYYY', true);
     return !parsedDate.isAfter(dayjs());
