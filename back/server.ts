@@ -9,6 +9,9 @@ import UserRouter from "@/modules/user/router";
 import MembersRouter from "@/modules/members/router";
 import ScaleRouter from "@/modules/scale/router";
 import AnalyticsRouter from "@/modules/analytics/router";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+import { apiReference } from "@scalar/express-api-reference";
 
 const app = express();
 const port = 8080;
@@ -16,7 +19,6 @@ const port = 8080;
 app.use(bodyParser.json());
 app.use(cors());
 
-// Health check endpoint
 app.get("/health", (_req, res) => {
   res.status(200).json({ 
     status: "OK", 
@@ -33,6 +35,32 @@ app.use("/user", UserRouter);
 app.use("/members", MembersRouter);
 app.use("/scale", ScaleRouter);
 app.use("/analytics", AnalyticsRouter);
+
+const swaggerSpec = swaggerJSDoc({
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "API de Agendamento",
+      version: "1.0.0",
+      description: "Documentação da API do sistema de agendamento",
+    },
+  },
+  apis: ["./modules/**/*.ts"],
+});
+
+app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.get("/openapi.json", (_req, res) => {
+  res.json(swaggerSpec);
+});
+
+app.use(
+  "/docs",
+  apiReference({
+    theme: "default",
+    spec: { url: "/openapi.json" },
+  })
+);
 
 
 app.listen(port, () => {
