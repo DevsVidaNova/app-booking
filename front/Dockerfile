@@ -1,22 +1,55 @@
-FROM node:20-alpine
+# ==========================
+# STAGE 1: Build
+# ==========================
+FROM node:20-alpine AS build
 
-# Atualiza os pacotes do sistema e instala dumb-init e curl
-RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
-
-# Diretório da aplicação
 WORKDIR /app
+
+# Instala curl para healthcheck
+RUN apk add --no-cache curl
 
 # Copia os arquivos de dependência
 COPY package*.json ./
 
 # Instala dependências
-RUN npm install
+RUN npm ci
 
 # Copia o restante do código
 COPY . .
 
-# Expor a porta padrão do Next.js dev server
-EXPOSE 3000
+# Build da aplicação Next.js
+RUN npm run build
 
-# Comando padrão: inicia o Next.js em modo dev
-CMD ["npm", "run", "dev"]
+# ==========================
+# STAGE 2: Produção
+# ==========================
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Instala curl para healthcheck
+RUN apk add --no-cache curl
+
+# Cria usuário seguro
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+# Copia apenas os arquivos necessários do build
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/next.config.mjs ./
+COPY --from=build /app/tsconfig.json ./
+
+# Muda para usuário não-root
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Railway usa a variável PORT
+EXPOSE $PORT
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:$PORT || exit 1
+
+# Comando para produção
+CMD ["npm", "start"]

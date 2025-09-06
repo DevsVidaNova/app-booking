@@ -26,7 +26,7 @@ import { CalendarSearch, CalendarX2, Pencil, } from "lucide-react"
 
 
 import { ListUser } from "@/types"
-import { listUsers } from "@/services/admin.service"
+import { listUsers } from "@/services/user.service"
 import { addScale } from "@/services/scale.service"
 import { Combobox } from '@/components/ui/combobox';
 

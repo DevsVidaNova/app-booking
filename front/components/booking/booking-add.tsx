@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React from 'react'
 import {
     Button,
     Drawer,
@@ -11,52 +11,33 @@ import {
     DrawerHeader,
     DrawerTitle,
     DrawerTrigger,
-    Message
 } from "@/components/ui"
 
 import { BookingFormBase, BookingFormData } from './booking-form-base'
-import { addBooking } from "@/services/booking.service"
+import { BookingsService } from "@/services/booking.service"
+import { toast } from 'sonner'
 
-interface BookingFormProps {
-    refetch: () => void;
-}
-
-export function BookingAdd({ refetch }: BookingFormProps) {
-    const [isLoading, setIsLoading] = useState(false)
-    const [success, setSuccess] = useState("")
-    const [error, setError] = useState("")
+export function BookingAdd() {
+    
+    const createMutation = BookingsService.useCreate()
 
     async function onSubmit(values: BookingFormData) {
-        setSuccess("")
-        setError("")
-        setIsLoading(true)
         
         try {
             const payload = {
-                ...values,
+                description: values.description,
+                room: values.room_id,
                 date: values.date ?? undefined,
+                start_time: values.start_time,
+                end_time: values.end_time,
                 repeat: values.repeat === "null" ? null : values.repeat,
-                day_repeat: values.repeat === "null" ? null : values.day_repeat,
+                day_repeat: values.repeat === "null" ? null : undefined,
             }
             
-            const res = await addBooking(payload)
-            
-            if (res?.error) {
-                if (/reserva nesse horário/i.test(res.error)) {
-                    setError("⚠️ Já existe uma reserva nesse horário para essa sala.")
-                } else {
-                    setError(`❌ Erro ao salvar: ${res.error}`)
-                }
-                return
-            }
-            
-            setSuccess("✅ Reserva feita com sucesso!")
-            await refetch()
+            await createMutation.mutateAsync(payload)
+            toast.success("✅ Reserva feita com sucesso!")
         } catch (err: any) {
-            console.error("❌ Erro inesperado:", err)
-            setError("Erro inesperado ao salvar a reserva.")
-        } finally {
-            setIsLoading(false)
+            toast.error(err.message)
         }
     }
 
@@ -76,12 +57,11 @@ export function BookingAdd({ refetch }: BookingFormProps) {
                     <BookingFormBase
                         onSubmit={onSubmit}
                         submitLabel="Concluir reserva"
-                        isLoading={isLoading}
+                        isLoading={createMutation.isPending}
                         className="border-0 shadow-none p-0"
                     />
                     <DrawerFooter>
                         <div className="flex flex-col w-full gap-4">
-                            <Message success={success} error={error} />
                             <DrawerClose>
                                 <Button variant="secondary" className="w-full">Fechar</Button>
                             </DrawerClose>
@@ -92,6 +72,3 @@ export function BookingAdd({ refetch }: BookingFormProps) {
         </Drawer>
     )
 }
-
-// Alias para compatibilidade
-export const BookingForm = BookingAdd

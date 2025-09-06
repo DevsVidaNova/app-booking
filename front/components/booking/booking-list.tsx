@@ -17,11 +17,10 @@ import {
 } from "@/components/ui"
 
 import Link from "next/link"
-import { useQuery } from '@tanstack/react-query'
 import { ListBooking } from "@/types";
-import { listBookings, listBookingsWeek, listBookingsMy, listBookingsToday, listBookingsMonth } from '@/services/booking.service';
-import { getUser } from '@/hooks/user';
+import { BookingsService } from '@/services/booking.service';
 import { useBookingState, BookingAddPopup, BookingEditPopup } from './index';
+import { useState, useEffect } from 'react';
 
 export function BookingList() {
     const {
@@ -34,35 +33,25 @@ export function BookingList() {
         closeEditModal,
     } = useBookingState();
 
-    const { data: user } = useQuery({
-        queryKey: ['user'],
-        queryFn: getUser
-    });
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const getCurrentUser = () => {
+            const res = localStorage.getItem('user') || sessionStorage.getItem('user');
+            return res ? JSON.parse(res) : null;
+        };
+        setUser(getCurrentUser());
+    }, []);
     
-    const { data: bookings, refetch } = useQuery<ListBooking[]>({
-        queryKey: ['bookings list'],
-        queryFn: listBookings,
-    });
+    const { data: bookings, refetch } = BookingsService.useList();
     
-    const { data: mybookings } = useQuery<ListBooking[]>({
-        queryKey: ['my bookings'],
-        queryFn: listBookingsMy,
-    });
+    const { data: mybookings } = BookingsService.useListByMe();
     
-    const { data: month } = useQuery<ListBooking[]>({
-        queryKey: ['month bookings'],
-        queryFn: listBookingsMonth,
-    });
+    const { data: month } = BookingsService.useListByMonth();
     
-    const { data: weekbookings, isLoading: weekbookingsloading } = useQuery<ListBooking[]>({
-        queryKey: ['week bookings'],
-        queryFn: listBookingsWeek,
-    });
+    const { data: weekbookings, isLoading: weekbookingsloading } = BookingsService.useListByWeek();
     
-    const { data: todaybookings } = useQuery<ListBooking[]>({
-        queryKey: ['today bookings'],
-        queryFn: listBookingsToday,
-    });
+    const { data: todaybookings } = BookingsService.useListByToday();
 
     const handleEdit = (booking: ListBooking) => {
         openEditModal(booking);

@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+// output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(100)
+  phone     String
+  email     String    @unique
+  password  String
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  bookings  Booking[]
+}
+
+model Booking {
+  id          String   @id @default(uuid())
+  description String   @db.VarChar(255)
+  date        DateTime?
+  startTime   String
+  endTime     String
+  repeat      Repeat?
+  dayRepeat   Int?
+  userId      String
+  roomId      String
+
+  user        User     @relation(fields: [userId], references: [id])
+  room        Room     @relation(fields: [roomId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Room {
+  id          String    @id @default(uuid())
+  name        String    @db.VarChar(100)
+  size        Int?
+  description String?   @db.VarChar(500)
+  exclusive   Boolean?  @default(false)
+  status      Boolean?  @default(true)
+
+  bookings    Booking[]
+}
+
+model Scale {
+  id              String   @id @default(uuid())
+  date            DateTime
+  name            String
+  description     String?
+  direction       String
+  band            String?
+  projection      String?
+  light           String?
+  transmission    String?
+  camera          String?
+  live            String?
+  sound           String?
+  trainingSound   String?
+  photography     String?
+  stories         String?
+  dynamic         String?
+  members         MemberOnScale[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Member {
+  id             Int      @id @default(autoincrement())
+  fullName       String
+  birthDate      DateTime
+  gender         String
+  cpf            String?  @unique
+  rg             String?
+  phone          String
+  email          String
+  street         String?
+  number         String?
+  neighborhood   String?
+  city           String?
+  state          String?
+  cep            String?
+  motherName     String?
+  fatherName     String?
+  maritalStatus  String?
+  hasChildren    Boolean? @default(false)
+  childrenCount  Int?
+
+  scales         MemberOnScale[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Tabela de relação N:N entre Member e Scale
+model MemberOnScale {
+  memberId Int
+  scaleId  String
+  member   Member @relation(fields: [memberId], references: [id])
+  scale    Scale  @relation(fields: [scaleId], references: [id])
+  @@id([memberId, scaleId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Repeat {
+  day
+  week
+  month
+  none
+}

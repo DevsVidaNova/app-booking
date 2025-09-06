@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { User } from "@/types";
 import { KeyRound, Trash, ArrowLeft, User as UserIcon, Mail, Phone, Shield } from "lucide-react";
-import { excludeUserById, showUserById, resetUserPassword } from "@/services/admin.service";
+import { excludeUserById, showUserById, resetUserPassword } from "@/services/user.service";
 import { UserEditForm } from "@/components/user/user-edit";
 import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";

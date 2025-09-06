@@ -1,6 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { getToken, deleteToken } from "../hooks/token";
-import { env } from "@/lib/env";
 
 interface FetchApiOptions extends AxiosRequestConfig {
   headers?: Record<string, string>;
@@ -9,7 +8,7 @@ interface FetchApiOptions extends AxiosRequestConfig {
 }
 
 const apiClient = axios.create({
-  baseURL: env.API_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -20,7 +19,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Limpa os tokens de autenticação
       await deleteToken();
-      
+
       // Redireciona para a página de login
       if (typeof window !== 'undefined') {
         window.location.href = '/auth/login';
@@ -56,7 +55,7 @@ export async function fetchApi<T = unknown>(
 export async function fetchWithAuth<T = Record<string, unknown>>(
   url: string,
   options: FetchApiOptions = {}
-): Promise<T> { 
+): Promise<T> {
   try {
     const token = await getToken();
     if (!token) {
@@ -74,7 +73,7 @@ export async function fetchWithAuth<T = Record<string, unknown>>(
       data: options.data || undefined,
     });
 
-    return response.data;  
+    return response.data;
   } catch (error: any) {
     console.error(`Error fetching with auth at ${url}:`, error.response?.data || error.message);
     throw error.response?.data || error;

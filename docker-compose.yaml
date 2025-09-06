@@ -1,39 +1,62 @@
 version: "3.9"
 
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: app_booking_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app_booking}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./back/prisma/migrations:/docker-entrypoint-initdb.d/migrations:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-app_booking}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
   # Backend API
   api:
     build:
       context: ./back
       dockerfile: Dockerfile
-    ports:
-      - "3001:8080"
-    env_file:
-      - ./back/.env.prod
+    container_name: app_booking_api
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-app_booking}
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret-key}
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     networks:
       - app-network
-      - supabase-network
 
   # Frontend Next.js
   frontend:
     build:
       context: ./front
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    env_file:
-      - ./front/.env.prod
-    volumes:
-      - ./front:/app
-      # - /app/node_modules
-      # - /app/.next
+    container_name: app_booking_frontend
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.espacovidanova.com.br}
     restart: unless-stopped
     depends_on:
       api:
@@ -46,11 +69,11 @@ services:
       start_period: 40s
     networks:
       - app-network
-      - supabase-network
 
-  # Nginx Reverse Proxy (opcional)
+  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
+    container_name: app_booking_nginx
     ports:
       - "80:80"
       - "443:443"
@@ -63,16 +86,10 @@ services:
     restart: unless-stopped
     networks:
       - app-network
-      - supabase-network
 
 volumes:
-  node_modules_api:
-  node_modules_frontend:
+  postgres_data:
 
 networks:
   app-network:
     driver: bridge
-
-  supabase-network:
-    external: true
-    name: supabase_default

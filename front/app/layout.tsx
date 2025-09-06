@@ -1,34 +1,29 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import './font.css'
-import ReactQueryProvider from '../lib/provider';
+import type { Metadata } from "next";
+import "./globals.css";
+import "./font.css";
+import ReactQueryProvider from "../lib/provider";
+import { Toaster } from "@/components/ui/sonner";
 export const metadata: Metadata = {
-  title: 'Vida Nova | Reservar Espaço',
-  description: 'Reserve um horário para atendimento no Espaço Vida Nova',
-}
-import { ThemeProvider } from "@/components/ui/theme-provider"
+  title: "Vida Nova | Reservar Espaço",
+  description: "Reserve um horário para atendimento no Espaço Vida Nova"
+};
+import { ThemeProvider } from "@/components/ui/theme-provider";
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
-  return (  
+  return (
     <html lang="pt-br" suppressHydrationWarning>
-       <head>
+      <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className='font-mundial'>
-      <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-        <ReactQueryProvider>
-            {children} 
-        </ReactQueryProvider>
-      </ThemeProvider>
+      <body className="font-mundial">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

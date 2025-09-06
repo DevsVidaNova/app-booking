@@ -11,30 +11,28 @@ import {
     DrawerHeader,
     DrawerTitle,
     DrawerTrigger,
-    Message
 } from "@/components/ui"
 
 import { Pencil } from "lucide-react"
 import { BookingFormBase, BookingFormData } from './booking-form-base'
-import { editBooking } from "@/services/booking.service"
+import { BookingsService } from "@/services/booking.service"
 import { ListBooking } from "@/types"
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
+import { toast } from 'sonner'
 
 dayjs.extend(customParseFormat)
 
 interface BookingEditFormProps {
     booking: ListBooking
-    refetch: () => void
     isOpen?: boolean
     onClose?: () => void
 }
 
-export function BookingEdit({ booking, refetch, isOpen = false, onClose }: BookingEditFormProps) {
+export function BookingEdit({ booking, isOpen = false, onClose }: BookingEditFormProps) {
     const [open, setOpen] = useState(isOpen)
-    const [isLoading, setIsLoading] = useState(false)
-    const [success, setSuccess] = useState('')
-    const [error, setError] = useState('')
+    
+    const updateMutation = BookingsService.useUpdate()
 
     React.useEffect(() => {
         setOpen(isOpen)
@@ -71,9 +69,7 @@ export function BookingEdit({ booking, refetch, isOpen = false, onClose }: Booki
     }
 
     async function onSubmit(values: BookingFormData) {
-        setSuccess('')
-        setError('')
-        setIsLoading(true)
+        
         try {
             // Transformar os dados para o formato esperado pela API
             // Converter data para DD/MM/YYYY (formato esperado pelo backend)
@@ -95,21 +91,18 @@ export function BookingEdit({ booking, refetch, isOpen = false, onClose }: Booki
                 repeat: values.repeat === 'none' ? null : values.repeat,
             }
             
+            await updateMutation.mutateAsync({
+                id: booking.id.toString(),
+                data: bookingData
+            })
             
-            const response = await editBooking(booking.id.toString(), bookingData)
-            if (response) {
-                setSuccess('Reserva editada com sucesso!')
-                refetch()
-                // Fechar modal após sucesso
-                setTimeout(() => {
-                    handleOpenChange(false)
-                    setSuccess('')
-                }, 1500)
-            }
+            toast.success('Reserva editada com sucesso!')
+            // Fechar modal após sucesso
+            setTimeout(() => {
+                handleOpenChange(false)
+            }, 1500)
         } catch (error: any) {
-            setError(error.message || 'Erro ao editar reserva')
-        } finally {
-            setIsLoading(false)
+            toast.error(error.message || 'Erro ao editar reserva')
         }
     }
 
@@ -143,21 +136,18 @@ export function BookingEdit({ booking, refetch, isOpen = false, onClose }: Booki
                                 onSubmit={onSubmit}
                                 defaultValues={formDefaultValues}
                                 submitLabel="Salvar alterações"
-                                isLoading={isLoading}
+                                isLoading={updateMutation.isPending}
                                 className="border-0 shadow-none p-0"
                             />
                         </div>
                         
                         <DrawerFooter>
                             <div className="flex flex-col w-full gap-4">
-                                {(success || error) && (
-                                    <Message success={success} error={error} />
-                                )}
                                 <DrawerClose asChild>
                                     <Button 
                                         variant="secondary" 
                                         className="w-full"
-                                        disabled={isLoading}
+                                        disabled={updateMutation.isPending}
                                     >
                                         Fechar
                                     </Button>
