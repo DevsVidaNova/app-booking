@@ -15,7 +15,7 @@ import { apiReference } from "@scalar/express-api-reference";
 import { init } from "@/config/db";
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3001;
 
 app.use(bodyParser.json());
 app.use(cors());
