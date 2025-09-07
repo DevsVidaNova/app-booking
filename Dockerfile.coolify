@@ -67,10 +67,13 @@ FROM node:20-alpine AS frontend-prod
 
 WORKDIR /app/front
 
+# Instala curl para healthcheck
+RUN apk add --no-cache curl
+
 # Copia frontend compilado
 COPY --from=frontend-build /app/front/package*.json ./
 COPY --from=frontend-build /app/front/node_modules ./node_modules
-COPY --from=frontend-build /app/front/.next ./.
+COPY --from=frontend-build /app/front/.next ./.next
 COPY --from=frontend-build /app/front/public ./public
 COPY --from=frontend-build /app/front/next.config.mjs ./
 COPY --from=frontend-build /app/front/tsconfig.json ./
@@ -78,6 +81,7 @@ COPY --from=frontend-build /app/front/tsconfig.json ./
 # Cria usuário seguro
 RUN addgroup -g 1002 -S nodejs && adduser -S nodejs -u 1002
 
+# Permissões corretas
 RUN chown -R nodejs:nodejs /app/front
 USER nodejs
 
