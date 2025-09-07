@@ -1,20 +1,12 @@
 "use client";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ListMember } from "@/types";
-import { listMembers } from "@/services/members.service";
+import { MembersService } from "@/services/members.service";
 import { MemberList } from "@/components/member/member-list";
 
 export default function Members() {
   const [page, setPage] = useState(1);
 
-  const { data, error, isLoading, refetch } = useQuery<ListMember>({
-    queryKey: [`list members ${page}`],
-    queryFn: async () => {
-      return await listMembers(page);
-    },
-    placeholderData: previousData => previousData
-  });
+  const { data, error, isLoading, refetch } = MembersService.useList(page);
 
   if (isLoading)
     return (

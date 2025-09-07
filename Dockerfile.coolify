@@ -1,0 +1,79 @@
+# ==========================
+# STAGE 1: Build Backend
+# ==========================
+FROM node:20-alpine AS backend-build
+
+WORKDIR /app/back
+
+# Instala curl para healthcheck
+RUN apk add --no-cache curl
+
+# Copia e instala dependências do backend
+COPY back/package*.json ./
+RUN npm ci
+
+# Copia código do backend e compila
+COPY back/ ./
+RUN npm run build
+
+# ==========================
+# STAGE 2: Build Frontend
+# ==========================
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /app/front
+
+# Copia e instala dependências do frontend
+COPY front/package*.json ./
+RUN npm ci
+
+# Copia código do frontend e compila
+COPY front/ ./
+RUN npm run build
+
+# ==========================
+# STAGE 3: Produção
+# ==========================
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Instala curl para healthcheck
+RUN apk add --no-cache curl
+
+# Cria usuário seguro
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+# Copia backend compilado
+COPY --from=backend-build /app/back/package*.json ./back/
+COPY --from=backend-build /app/back/node_modules ./back/node_modules
+COPY --from=backend-build /app/back/dist ./back/dist
+
+# Copia frontend compilado
+COPY --from=frontend-build /app/front/package*.json ./front/
+COPY --from=frontend-build /app/front/node_modules ./front/node_modules
+COPY --from=frontend-build /app/front/.next ./front/.next
+COPY --from=frontend-build /app/front/public ./front/public
+COPY --from=frontend-build /app/front/next.config.mjs ./front/
+COPY --from=frontend-build /app/front/tsconfig.json ./front/
+
+# Copia arquivos de configuração
+COPY nginx.conf ./
+COPY package*.json ./
+
+# Muda para usuário não-root
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Expõe porta
+EXPOSE 3000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
+
+# Script de inicialização
+COPY start.sh ./
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
