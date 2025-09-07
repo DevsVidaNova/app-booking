@@ -58,7 +58,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3001/health || exit 1
 
 # CMD backend
-CMD ["node", "dist/main.js"]   # Ajuste para o entrypoint do seu backend
+CMD ["node", "dist/main.js"]
 
 # ==========================
 # STAGE 4: Frontend Produção
@@ -89,4 +89,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000 || exit 1
 
 # CMD frontend
-CMD ["npm", "start"]   # ou "next", dependendo de como você inicia
+CMD ["npx", "next", "start", "-p", "3000"]
