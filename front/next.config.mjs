@@ -24,21 +24,12 @@ const nextConfig = {
   },
 
   async rewrites() {
-    // Use variável de ambiente para API URL
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
     return [
       {
-        source: '/auth/:path*',   // 👈 Captura /auth/*
-        destination: `${apiUrl}/auth/:path*`, // Redireciona pro backend
-      },
-      {
         source: '/api/:path*',
-        destination: `${apiUrl}/api/:path*`,
-      },
-      {
-        source: '/webhook/:path*',
-        destination: `${apiUrl}/webhook/:path*`,
+        destination: `${apiUrl}/:path*`,
       },
     ]
   },
