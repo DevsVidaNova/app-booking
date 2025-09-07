@@ -22,35 +22,36 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
-  /*
+
   async rewrites() {
-    // Use variável de ambiente para API URL, com fallback para desenvolvimento
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    
+    // Use variável de ambiente para API URL
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+
     return [
       {
-        source: '/api/:path*',  // Qualquer rota que começa com "/api"
-        destination: `${apiUrl}/:path*`,  // Reescreve para o backend
+        source: '/auth/:path*',   // 👈 Captura /auth/*
+        destination: `${apiUrl}/auth/:path*`, // Redireciona pro backend
       },
       {
-        source: '/webhook/:path*',  // Qualquer rota que começa com "/webhook"
-        destination: `${apiUrl}/webhook/:path*`,  // Reescreve para o backend
+        source: '/api/:path*',
+        destination: `${apiUrl}/api/:path*`,
       },
       {
-        source: '/supabase/:path*', 
-        destination: `${apiUrl}/supabase/:path*`,  
+        source: '/webhook/:path*',
+        destination: `${apiUrl}/webhook/:path*`,
       },
-    ];
+      {
+        source: '/supabase/:path*',
+        destination: `${apiUrl}/supabase/:path*`,
+      },
+    ]
   },
-  */
 }
 
 mergeConfig(nextConfig, userConfig)
 
 function mergeConfig(nextConfig, userConfig) {
-  if (!userConfig) {
-    return
-  }
+  if (!userConfig) return
 
   for (const key in userConfig) {
     if (
