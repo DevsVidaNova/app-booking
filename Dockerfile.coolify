@@ -5,10 +5,7 @@ FROM node:20-alpine AS backend-build
 
 WORKDIR /app/back
 
-# Instala curl para healthcheck
-RUN apk add --no-cache curl
-
-# Copia e instala dependências do backend
+# Instala dependências do backend
 COPY back/package*.json ./
 RUN npm ci
 
@@ -23,7 +20,7 @@ FROM node:20-alpine AS frontend-build
 
 WORKDIR /app/front
 
-# Copia e instala dependências do frontend
+# Instala dependências do frontend
 COPY front/package*.json ./
 RUN npm ci
 
@@ -32,11 +29,11 @@ COPY front/ ./
 RUN npm run build
 
 # ==========================
-# STAGE 3: Produção
+# STAGE 3: Backend Produção
 # ==========================
-FROM node:20-alpine AS production
+FROM node:20-alpine AS backend-prod
 
-WORKDIR /app
+WORKDIR /app/back
 
 # Instala curl para healthcheck
 RUN apk add --no-cache curl
@@ -45,35 +42,51 @@ RUN apk add --no-cache curl
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
 # Copia backend compilado
-COPY --from=backend-build /app/back/package*.json ./back/
-COPY --from=backend-build /app/back/node_modules ./back/node_modules
-COPY --from=backend-build /app/back/dist ./back/dist
-
-# Copia frontend compilado
-COPY --from=frontend-build /app/front/package*.json ./front/
-COPY --from=frontend-build /app/front/node_modules ./front/node_modules
-COPY --from=frontend-build /app/front/.next ./front/.next
-COPY --from=frontend-build /app/front/public ./front/public
-COPY --from=frontend-build /app/front/next.config.mjs ./front/
-COPY --from=frontend-build /app/front/tsconfig.json ./front/
-
-# Copia arquivos de configuração
-COPY nginx.conf ./
-COPY package*.json ./
+COPY --from=backend-build /app/back/package*.json ./
+COPY --from=backend-build /app/back/node_modules ./node_modules
+COPY --from=backend-build /app/back/dist ./dist
 
 # Muda para usuário não-root
-RUN chown -R nodejs:nodejs /app
+RUN chown -R nodejs:nodejs /app/back
 USER nodejs
 
-# Expõe porta
+# Expõe porta do backend
+EXPOSE 3001
+
+# Healthcheck backend
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
+
+# CMD backend
+CMD ["node", "dist/main.js"]   # Ajuste para o entrypoint do seu backend
+
+# ==========================
+# STAGE 4: Frontend Produção
+# ==========================
+FROM node:20-alpine AS frontend-prod
+
+WORKDIR /app/front
+
+# Copia frontend compilado
+COPY --from=frontend-build /app/front/package*.json ./
+COPY --from=frontend-build /app/front/node_modules ./node_modules
+COPY --from=frontend-build /app/front/.next ./.
+COPY --from=frontend-build /app/front/public ./public
+COPY --from=frontend-build /app/front/next.config.mjs ./
+COPY --from=frontend-build /app/front/tsconfig.json ./
+
+# Cria usuário seguro
+RUN addgroup -g 1002 -S nodejs && adduser -S nodejs -u 1002
+
+RUN chown -R nodejs:nodejs /app/front
+USER nodejs
+
+# Expõe porta do frontend
 EXPOSE 3000
 
-# Healthcheck
+# Healthcheck frontend
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000 || exit 1
 
-# Script de inicialização
-COPY start.sh ./
-RUN chmod +x start.sh
-
-CMD ["./start.sh"]
+# CMD frontend
+CMD ["npm", "start"]   # ou "next", dependendo de como você inicia
