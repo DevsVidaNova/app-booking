@@ -9,7 +9,7 @@ export const createBooking = async (req: Request, res: Response, _next: NextFunc
     const validatedData = createBookingSchema.parse(req.body);
 
     const user = (req as any).profile || { id: (req as any).user?.id };
-    await BookingHandler.create(user, validatedData, res);
+    await BookingHandler.create(user, validatedData as any, res);
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({

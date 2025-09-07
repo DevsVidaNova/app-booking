@@ -12,7 +12,7 @@ export async function createRoom(req: any, res: any) {
   try {
     const validatedData = createRoomSchema.parse(req.body);
 
-    const result = await RoomHandler.create(validatedData);
+    const result = await RoomHandler.create(validatedData as any);
     if (result.error) {
       return res.status(400).json({ error: result.error });
     }

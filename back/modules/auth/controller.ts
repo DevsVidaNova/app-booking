@@ -6,7 +6,7 @@ import { createUserSchema, loginUserSchema, updateUserSchema } from "../user/sch
 export async function signUpUser(req: any, res: any) {
   try {
     const parsed = createUserSchema.parse(req.body);
-    const result = await AuthHandler.signUp(parsed);
+    const result = await AuthHandler.signUp(parsed as any);
     if (result.error) {
       return res.status(400).json({ error: result.error.message });
     }
@@ -19,7 +19,7 @@ export async function signUpUser(req: any, res: any) {
 export async function loginUser(req: any, res: any) {
   try {
     const parsed = loginUserSchema.parse(req.body);
-    const result = await AuthHandler.login(parsed);
+    const result = await AuthHandler.login(parsed as any);
     if (result.error) {
       return res.status(401).json({ error: result.error.message });
     }

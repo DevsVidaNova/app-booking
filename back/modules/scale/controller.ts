@@ -17,7 +17,7 @@ import {
 export async function createScale(req: any, res: any) {
   try {
     const input: CreateScaleInput = createScaleSchema.parse(req.body);
-    const result = await ScaleHandler.create(input);
+    const result = await ScaleHandler.create(input as any);
 
     if (result.error) {
       return res.status(400).json({ error: result.error });

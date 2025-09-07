@@ -21,7 +21,7 @@ function handleValidationError(error: z.ZodError, res: any) {
 export async function createMember(req: any, res: any) {
   try {
     const validatedData = createMemberSchema.parse(req.body);
-    const result = await MemberHandler.create(validatedData);
+    const result = await MemberHandler.create(validatedData as any);
 
     if (result.error) {
       return res.status(400).json({ error: result.error });
@@ -142,7 +142,7 @@ export async function searchMember(req: any, res: any) {
 export async function searchByFilter(req: any, res: any) {
   try {
     const validatedData = searchByFilterSchema.parse(req.body);
-    const result = await MemberHandler.searchByFilter(validatedData);
+    const result = await MemberHandler.searchByFilter(validatedData as any);
 
     if (result.error) {
       return res.status(400).json({ error: result.error });
