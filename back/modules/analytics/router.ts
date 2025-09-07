@@ -1,7 +1,7 @@
 import express from "express";
 import { requireAdmin } from "@/config/middleware";
 import { getStats } from "./controller";
-import { getAnalytics } from '../members_new/controller';
+import { getAnalytics } from '../members/controller';
 
 /**
  * @swagger

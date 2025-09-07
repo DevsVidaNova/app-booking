@@ -10,7 +10,7 @@ import {
   searchByFilterSchema,
   idSchema,
 } from "./schemas";
-import { AnalyticsHandler } from "../analytics_new/handler";
+import { AnalyticsHandler } from "../analytics/handler";
 // Função auxiliar para lidar com erros de validação
 function handleValidationError(error: z.ZodError, res: any) {
   const firstError = error.errors[0];

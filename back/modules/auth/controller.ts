@@ -1,7 +1,7 @@
 import {
   AuthHandler,
 } from "./handler";
-import { createUserSchema, loginUserSchema, updateUserSchema } from "../user_new/schemas";
+import { createUserSchema, loginUserSchema, updateUserSchema } from "../user/schemas";
 
 export async function signUpUser(req: any, res: any) {
   try {
