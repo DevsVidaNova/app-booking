@@ -36,10 +36,10 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Railway usa a variável PORT
-EXPOSE $PORT
+# Expõe porta 3001
+EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:$PORT/health || exit 1
+  CMD curl -f http://localhost:3001/health || exit 1
 
 CMD ["npm", "start"]

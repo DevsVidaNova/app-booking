@@ -45,11 +45,11 @@ COPY --from=build /app/tsconfig.json ./
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Railway usa a variável PORT
-EXPOSE $PORT
+# Expõe porta 3000
+EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:$PORT || exit 1
+  CMD curl -f http://localhost:3000 || exit 1
 
 # Comando para produção
 CMD ["npm", "start"]
