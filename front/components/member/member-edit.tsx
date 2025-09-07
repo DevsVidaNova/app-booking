@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button, Input, Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose, Message, Form, FormControl, FormField, FormItem, Checkbox, FormMessage, FormLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/";
-import { editMember } from "@/services/members.service";
+import { MembersService } from "@/services/members.service";
 import { Check, Pencil } from "lucide-react";
 
 const formSchema = z.object({
@@ -39,6 +39,8 @@ export function MemberEditForm({ id, refetch, defaultValues }: { id: string; ref
     defaultValues: defaultValues
   });
 
+  const updateMemberMutation = MembersService.useUpdate();
+
   const handleCEP = useCallback(() => {
     const cep = form.getValues("cep");
     if (cep?.length === 8) {
@@ -69,7 +71,7 @@ export function MemberEditForm({ id, refetch, defaultValues }: { id: string; ref
     setSuccess("");
     console.log(values);
     try {
-      const response = await editMember(id, values);
+      const response = await updateMemberMutation.mutateAsync({ id, data: values });
       if (response) {
         setSuccess("Membro editado com sucesso!");
         form.reset();

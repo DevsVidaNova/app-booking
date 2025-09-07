@@ -19,10 +19,9 @@ import {
   BookingCardList,
   BookingAddPopup,
   BookingEditPopup,
-  useBookingState,
-  useBookingFilters,
 } from './index'
-import { listBookings } from '@/services/booking.service'
+import { useBookingState, useBookingFilters } from '@/hooks/use-booking-state'
+import { BookingsService } from '@/services/booking.service'
 import { ListBooking } from '@/types'
 
 interface BookingDashboardProps {
@@ -61,11 +60,7 @@ export function BookingDashboard({
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['bookings', filters, activeTab],
-    queryFn: () => listBookings(),
-    refetchInterval: 30000, // Atualiza a cada 30 segundos
-  })
+  } = BookingsService.useList()
 
   // Filtrar reservas baseado nos filtros ativos
   const filteredBookings = React.useMemo(() => {

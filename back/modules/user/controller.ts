@@ -42,7 +42,6 @@ export async function deleteUser(req: any, res: any) {
 export async function updateUser(req: any, res: any) {
   const userId = req.params.id;
 
-  console.log(userId)
   if (!userId) {
     return res.status(400).json({ error: "ID do usuário não encontrado." });
   }

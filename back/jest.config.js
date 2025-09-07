@@ -25,7 +25,8 @@ module.exports = {
     'utils/**/*.ts',
     'modules/**/*.ts',
     '!**/*.test.ts',
-    '!**/node_modules/**'
+    '!**/node_modules/**',
+    '!**/dist/**'
   ],
   testMatch: [
     '**/__tests__/**/*.js',
@@ -33,6 +34,10 @@ module.exports = {
     '**/__tests__/**/*.tsx',
     '**/?(*.)+(spec|test).[jt]s',
     '**/?(*.)+(spec|test).[jt]sx'
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/'
   ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   coverageThreshold: {

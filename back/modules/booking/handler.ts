@@ -358,7 +358,6 @@ export const BookingHandler = {
       });
       res.status(201).json(bookingData);
     } catch (err) {
-      console.error("Erro ao criar reserva:", err);
       res.status(500).json({ message: "Erro ao criar reserva" });
     }
   },
@@ -471,7 +470,6 @@ export const BookingHandler = {
       });
       res.json(updated);
     } catch (err) {
-      console.error("Erro ao atualizar reserva:", err);
       res.status(500).json({ error: "Erro ao atualizar reserva" });
     }
   },
@@ -487,7 +485,6 @@ export const BookingHandler = {
       const formattedData = data.map((booking: any) => formatBookingData(booking));
       res.json(formattedData);
     } catch (err) {
-      console.error("Erro ao buscar reservas:", err);
       res.status(500).json({ error: "Erro ao buscar reservas" });
     }
   },
@@ -500,8 +497,7 @@ export const BookingHandler = {
     try {
       await db.booking.delete({ where: { id: id } });
       res.json({ message: "Reserva deletada com sucesso" });
-    } catch (err) {
-      console.error("Erro ao deletar reserva:", err);
+    } catch (_err) {
       res.status(500).json({ error: "Erro ao deletar reserva" });
     }
   },
@@ -522,7 +518,6 @@ export const BookingHandler = {
       }
       res.json(data);
     } catch (err) {
-      console.error("Erro ao buscar reserva por ID:", err);
       res.status(500).json({ error: "Erro ao buscar reserva por ID" });
     }
   },
@@ -548,7 +543,6 @@ export const BookingHandler = {
       const formattedData = (data || []).map((booking: any) => formatBookingData(booking));
       res.json(formattedData);
     } catch (err) {
-      console.error("Erro ao buscar reservas:", err);
       res.status(500).json({ error: "Erro ao buscar reservas" });
     }
   },
@@ -582,7 +576,6 @@ export const BookingHandler = {
 
       res.json(formattedData);
     } catch (err) {
-      console.error("Erro ao buscar reservas:", err);
       res.status(500).json({ error: "Erro ao buscar reservas" });
     }
   },
@@ -657,7 +650,6 @@ export const BookingHandler = {
 
       res.json(formattedData);
     } catch (err) {
-      console.error("Erro ao buscar reservas:", err);
       res.status(500).json({ error: "Erro ao buscar reservas" });
     }
   },
@@ -721,7 +713,6 @@ export const BookingHandler = {
 
       res.json(formattedData);
     } catch (err) {
-      console.error("Erro ao buscar reservas:", err);
       res.status(500).json({ error: "Erro ao buscar reservas" });
     }
   },
@@ -862,7 +853,6 @@ export const BookingHandler = {
 
       res.json(formattedData);
     } catch (err) {
-      console.error("Erro ao buscar reservas:", err);
       res.status(500).json({ error: "Erro ao buscar reservas" });
     }
   },
@@ -929,7 +919,6 @@ export const BookingHandler = {
       });
       res.json(formattedData);
     } catch (err) {
-      console.error("Erro ao buscar reservas:", err);
       res.status(500).json({ error: "Erro ao buscar reservas" });
     }
   },
@@ -983,7 +972,6 @@ export const BookingHandler = {
 
       res.json(formattedData);
     } catch (err) {
-      console.error("Erro ao buscar reservas:", err);
       res.status(500).json({ error: "Erro ao buscar reservas" });
     }
   }

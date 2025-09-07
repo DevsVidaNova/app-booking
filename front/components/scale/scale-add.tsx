@@ -26,13 +26,11 @@ import {
   Message,
 } from "@/components/ui";
 
-import { useQuery } from "@tanstack/react-query";
-
 import { CalendarSearch, CalendarX2 } from "lucide-react";
 
 import { ListUser } from "@/types";
-import { listUsers } from "@/services/user.service";
-import { addScale } from "@/services/scale.service";
+import { UserService } from "@/services/user.service";
+import { ScaleService } from "@/services/scale.service";
 import { Combobox } from "@/components/ui/combobox";
 
 const formSchema = z.object({
@@ -117,10 +115,9 @@ export function ScaleAdd({ refetch }: { refetch: () => void }) {
 
   const {
     data: users,
-  } = useQuery<ListUser[]>({
-    queryKey: ["list users"],
-    queryFn: () => listUsers(1),
-  });
+  } = UserService.useList(1);
+
+  const createScaleMutation = ScaleService.useCreate();
 
   const [success, setsuccess] = useState("");
   const [error, seterror] = useState("");
@@ -129,7 +126,7 @@ export function ScaleAdd({ refetch }: { refetch: () => void }) {
     setsuccess("");
     seterror("");
     try {
-      const res = await addScale(values);
+      const res = await createScaleMutation.mutateAsync(values);
       if (res) {
         setsuccess("Escala criada com sucesso!");
         refetch();
@@ -270,7 +267,7 @@ export function ScaleAdd({ refetch }: { refetch: () => void }) {
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder="Selecione uma pessoa"
-                            options={users || []}
+                            options={(users?.data || []) as { id: string; name: string; }[]}
                           />
                           <FormMessage />
                         </FormItem>

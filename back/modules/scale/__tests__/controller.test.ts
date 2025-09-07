@@ -7,11 +7,11 @@ import {
   searchScale,
   duplicateScale
 } from '../controller';
-import * as handler from '../handler';
+import { ScaleHandler } from '../handler';
 
 // Mock do handler
 jest.mock('../handler');
-const mockHandler = handler as jest.Mocked<typeof handler>;
+const mockHandler = ScaleHandler as jest.Mocked<typeof ScaleHandler>;
 
 describe('Scale Controller', () => {
   let req: any;
@@ -47,13 +47,13 @@ describe('Scale Controller', () => {
         direction: 'Direção Teste',
         band: '1'
       };
-      mockHandler.createScaleHandler.mockResolvedValue({ data: null });
+      mockHandler.create.mockResolvedValue({ data: null });
 
       // When
       await createScale(req, res);
 
       // Then
-      expect(mockHandler.createScaleHandler).toHaveBeenCalledWith(req.body);
+      expect(mockHandler.create).toHaveBeenCalledWith(req.body);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ message: 'Escala criada com sucesso.' });
     });
@@ -68,7 +68,8 @@ describe('Scale Controller', () => {
       // Then
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: "Faltam dados obrigatórios: 'date', 'name' e 'direction'."
+        error: "Dados inválidos",
+        details: ["Required", "Required"]
       });
     });
 
@@ -87,7 +88,7 @@ describe('Scale Controller', () => {
         name: 'Escala Teste',
         direction: 'Direção Teste'
       };
-      mockHandler.createScaleHandler.mockResolvedValue({ error: 'Erro do handler.' });
+      mockHandler.create.mockResolvedValue({ error: 'Erro do handler.' });
 
       // When
       await createScale(req, res);
@@ -110,7 +111,10 @@ describe('Scale Controller', () => {
 
       // Then
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Data não pode ser no passado.' });
+      expect(res.json).toHaveBeenCalledWith({ 
+        error: "Dados inválidos",
+        details: ["Data não pode ser no passado."]
+      });
     });
   });
 
@@ -135,13 +139,13 @@ describe('Scale Controller', () => {
           totalPages: 1
         }
       };
-      mockHandler.getScalesHandler.mockResolvedValue({ data: mockScalesResult });
+      mockHandler.list.mockResolvedValue({ data: mockScalesResult });
 
       // When
       await getScales(req, res);
 
       // Then
-      expect(mockHandler.getScalesHandler).toHaveBeenCalledWith({ page: 1, pageSize: 15 });
+      expect(mockHandler.list).toHaveBeenCalledWith({ page: 1, pageSize: 15 });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockScalesResult);
     });
@@ -158,20 +162,20 @@ describe('Scale Controller', () => {
           totalPages: 0
         }
       };
-      mockHandler.getScalesHandler.mockResolvedValue({ data: mockScalesResult });
+      mockHandler.list.mockResolvedValue({ data: mockScalesResult });
 
       // When
       await getScales(req, res);
 
       // Then
-      expect(mockHandler.getScalesHandler).toHaveBeenCalledWith({ page: 2, pageSize: 10 });
+      expect(mockHandler.list).toHaveBeenCalledWith({ page: 2, pageSize: 10 });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockScalesResult);
     });
 
     it('should handle handler error', async () => {
       // Given
-      mockHandler.getScalesHandler.mockResolvedValue({ error: 'Erro ao listar escalas.' });
+      mockHandler.list.mockResolvedValue({ error: 'Erro ao listar escalas.' });
 
       // When
       await getScales(req, res);
@@ -192,13 +196,13 @@ describe('Scale Controller', () => {
         name: 'Escala Teste',
         description: 'Descrição teste'
       };
-      mockHandler.getScaleByIdHandler.mockResolvedValue({ data: mockScale });
+      mockHandler.single.mockResolvedValue({ data: mockScale });
 
       // When
       await getScaleById(req, res);
 
       // Then
-      expect(mockHandler.getScaleByIdHandler).toHaveBeenCalledWith('1');
+      expect(mockHandler.single).toHaveBeenCalledWith('1');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockScale);
     });
@@ -206,7 +210,7 @@ describe('Scale Controller', () => {
     it('should handle scale not found', async () => {
       // Given
       req.params.id = '999';
-      mockHandler.getScaleByIdHandler.mockResolvedValue({ error: 'Escala não encontrada.' });
+      mockHandler.single.mockResolvedValue({ error: 'Escala não encontrada.' });
 
       // When
       await getScaleById(req, res);
@@ -222,13 +226,13 @@ describe('Scale Controller', () => {
       // Given
       req.params.id = '1';
       req.body = { name: 'Escala Atualizada' };
-      mockHandler.updateScaleHandler.mockResolvedValue({ data: null });
+      mockHandler.update.mockResolvedValue({ data: null });
 
       // When
       await updateScale(req, res);
 
       // Then
-      expect(mockHandler.updateScaleHandler).toHaveBeenCalledWith('1', req.body);
+      expect(mockHandler.update).toHaveBeenCalledWith('1', req.body);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ message: 'Escala atualizada com sucesso.' });
     });
@@ -237,7 +241,7 @@ describe('Scale Controller', () => {
       // Given
       req.params.id = '1';
       req.body = { name: 'Escala Atualizada' };
-      mockHandler.updateScaleHandler.mockResolvedValue({ error: 'Erro ao atualizar escala.' });
+      mockHandler.update.mockResolvedValue({ error: 'Erro ao atualizar escala.' });
 
       // When
       await updateScale(req, res);
@@ -252,13 +256,13 @@ describe('Scale Controller', () => {
     it('should delete scale successfully', async () => {
       // Given
       req.params.id = '1';
-      mockHandler.deleteScaleHandler.mockResolvedValue({ data: null });
+      mockHandler.delete.mockResolvedValue({ data: null });
 
       // When
       await deleteScale(req, res);
 
       // Then
-      expect(mockHandler.deleteScaleHandler).toHaveBeenCalledWith('1');
+      expect(mockHandler.delete).toHaveBeenCalledWith('1');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ message: 'Escala excluída com sucesso.' });
     });
@@ -266,7 +270,7 @@ describe('Scale Controller', () => {
     it('should handle delete error', async () => {
       // Given
       req.params.id = '999';
-      mockHandler.deleteScaleHandler.mockResolvedValue({ error: 'Escala não encontrada.' });
+      mockHandler.delete.mockResolvedValue({ error: 'Escala não encontrada.' });
 
       // When
       await deleteScale(req, res);
@@ -289,20 +293,20 @@ describe('Scale Controller', () => {
           description: 'Descrição teste'
         }
       ];
-      mockHandler.searchScaleHandler.mockResolvedValue({ data: mockScales });
+      mockHandler.search.mockResolvedValue({ data: mockScales });
 
       // When
       await searchScale(req, res);
 
       // Then
-      expect(mockHandler.searchScaleHandler).toHaveBeenCalledWith('Teste');
+      expect(mockHandler.search).toHaveBeenCalledWith('Teste');
       expect(res.json).toHaveBeenCalledWith(mockScales);
     });
 
     it('should handle search error', async () => {
       // Given
       req.body = { name: 'Inexistente' };
-      mockHandler.searchScaleHandler.mockResolvedValue({ error: 'Escala não encontrada.' });
+      mockHandler.search.mockResolvedValue({ error: 'Escala não encontrada.' });
 
       // When
       await searchScale(req, res);
@@ -323,13 +327,13 @@ describe('Scale Controller', () => {
         name: 'Escala Teste (duplicado)',
         description: 'Descrição teste'
       };
-      mockHandler.duplicateScaleHandler.mockResolvedValue({ data: mockDuplicatedScale });
+      mockHandler.duplicate.mockResolvedValue({ data: mockDuplicatedScale });
 
       // When
       await duplicateScale(req, res);
 
       // Then
-      expect(mockHandler.duplicateScaleHandler).toHaveBeenCalledWith('1');
+      expect(mockHandler.duplicate).toHaveBeenCalledWith('1');
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(mockDuplicatedScale);
     });
@@ -337,7 +341,7 @@ describe('Scale Controller', () => {
     it('should handle duplicate error', async () => {
       // Given
       req.params.id = '999';
-      mockHandler.duplicateScaleHandler.mockResolvedValue({ error: 'Escala não encontrada.' });
+      mockHandler.duplicate.mockResolvedValue({ error: 'Escala não encontrada.' });
 
       // When
       await duplicateScale(req, res);

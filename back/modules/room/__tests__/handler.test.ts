@@ -1,5 +1,22 @@
-import * as handler from '../handler';
+import { RoomHandler } from '../handler';
 import { UpdateRoomInput } from '../types';
+
+// Mock do Prisma
+jest.mock('@/config/db', () => ({
+  db: {
+    room: {
+      create: jest.fn().mockResolvedValue({}),
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn().mockResolvedValue(null),
+      update: jest.fn().mockResolvedValue({}),
+      delete: jest.fn().mockResolvedValue({}),
+      count: jest.fn().mockResolvedValue(0)
+    },
+    booking: {
+      findMany: jest.fn().mockResolvedValue([])
+    }
+  }
+}));
 
 // Mock do dayjs
 jest.mock('dayjs', () => {
@@ -17,45 +34,31 @@ jest.mock('dayjs', () => {
   };
 });
 
-jest.mock('@/config/supabaseClient', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn().mockReturnValue({
-      insert: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: { id: '1', name: 'Test Room' }, error: null })
-        })
-      }),
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: null, error: null }),
-          neq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: null, error: null })
-          })
-        }),
-        range: jest.fn().mockResolvedValue({ data: [{ id: '1', name: 'Test Room' }], error: null, count: 1 }),
-        ilike: jest.fn().mockResolvedValue({ data: [{ id: '1', name: 'Test Room' }], error: null })
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: { id: '1', name: 'Updated Room' }, error: null })
-          })
-        })
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ data: null, error: null })
-      })
-    })
-  }
+// Mock do getPagination
+jest.mock('@/utils/pagination', () => ({
+  getPagination: jest.fn(() => ({
+    limit: 10,
+    offset: 0,
+    page: 1,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
+  }))
 }));
+
+// Importar os mocks para usar nos testes
+import { db } from '@/config/db';
+import { getPagination } from '@/utils/pagination';
+
+const mockDb = db as jest.Mocked<typeof db>;
+const mockGetPagination = getPagination as jest.MockedFunction<typeof getPagination>;
 
 describe('Room Handler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('createRoomHandler', () => {
+  describe('create', () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -69,60 +72,140 @@ describe('Room Handler', () => {
         status: true
       };
 
-      const result = await handler.createRoomHandler(roomData);
+      const mockRoom = { id: '1', ...roomData };
+      (mockDb.room.create as any).mockResolvedValue(mockRoom);
+
+      const result = await RoomHandler.create(roomData);
 
       expect(result.error).toBeNull();
-      expect(result.data).toBeDefined();
+      expect(result.data).toEqual(mockRoom);
+      expect(mockDb.room.create).toHaveBeenCalledWith({ data: roomData });
     });
 
-    it('deve retornar erro quando nome não é fornecido', async () => {
+    it('deve lidar com erro do Prisma', async () => {
       const roomData = {
-        size: 10
-      } as any;
+        name: 'Sala de Reunião',
+        size: 10,
+        description: 'Sala para reuniões',
+        exclusive: false,
+        status: true
+      };
 
-      const result = await handler.createRoomHandler(roomData);
+      (mockDb.room.create as any).mockRejectedValue(new Error('Erro do banco'));
 
-      expect(result.error).toBe('O nome da sala é obrigatório.');
-      expect(result.data).toBeNull();
+      await expect(RoomHandler.create(roomData)).rejects.toThrow('Erro do banco');
     });
   });
 
-  describe('getRoomsHandler', () => {
+  describe('list', () => {
     it('deve retornar salas com paginação padrão', async () => {
-      const result = await handler.getRoomsHandler();
-      expect(result.data).toBeDefined();
-      expect(result.page).toBe(1);
-      expect(result.total).toBe(1);
+      const mockRooms = [
+        { id: '1', name: 'Sala 1', size: 10, description: 'Descrição', exclusive: false, status: true },
+        { id: '2', name: 'Sala 2', size: 15, description: 'Descrição 2', exclusive: true, status: true }
+      ];
+      const mockTotal = 2;
+
+      (mockDb.room.findMany as any).mockResolvedValue(mockRooms as any);
+      (mockDb.room.count as any).mockResolvedValue(mockTotal);
+      mockGetPagination.mockReturnValue({
+        limit: 10,
+        offset: 0,
+        page: 1,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false
+      });
+
+      const result = await RoomHandler.list();
+
+      expect(result.data).toEqual(mockRooms);
       expect(result.error).toBeNull();
+      expect(mockDb.room.findMany).toHaveBeenCalledWith({ skip: 0, take: 10 });
+      expect(mockDb.room.count).toHaveBeenCalled();
+      expect(mockGetPagination).toHaveBeenCalledWith(1, 10, mockTotal);
     });
 
     it('deve retornar salas com paginação customizada', async () => {
-      const result = await handler.getRoomsHandler(2, 5);
-      expect(result.data).toBeDefined();
-      expect(result.page).toBe(2);
+      const mockRooms = [{ id: '1', name: 'Sala 1', size: 10, description: 'Descrição', exclusive: false, status: true }];
+      const mockTotal = 25;
+
+      (mockDb.room.findMany as any).mockResolvedValue(mockRooms as any);
+      (mockDb.room.count as any).mockResolvedValue(mockTotal);
+      mockGetPagination.mockReturnValue({
+        limit: 5,
+        offset: 5,
+        page: 2,
+        totalPages: 5,
+        hasNext: true,
+        hasPrev: true
+      });
+
+      const result = await RoomHandler.list(2, 5);
+
+      expect(result.data).toEqual(mockRooms);
       expect(result.error).toBeNull();
+      expect(mockDb.room.findMany).toHaveBeenCalledWith({ skip: 5, take: 5 });
+      expect(mockGetPagination).toHaveBeenCalledWith(2, 5, mockTotal);
     });
 
-    it('deve lidar com erro do Supabase', async () => {
-      const result = await handler.getRoomsHandler();
-      expect(result).toBeDefined();
+    it('deve lidar com erro do Prisma', async () => {
+      (mockDb.room.findMany as any).mockRejectedValue(new Error('Erro do banco'));
+
+      await expect(RoomHandler.list()).rejects.toThrow('Erro do banco');
     });
   });
 
-  describe('getRoomByIdHandler', () => {
-    it('deve buscar sala por ID', async () => {
-      const result = await handler.getRoomByIdHandler('1');
-      expect(result.data).toBeDefined();
+  describe('single', () => {
+    it('deve buscar sala por ID com sucesso', async () => {
+      const mockRoom = {
+        id: '1',
+        name: 'Sala 1',
+        size: 10,
+        description: 'Descrição',
+        exclusive: false,
+        status: true
+      };
+      const mockBookings: any[] = [];
+
+      (mockDb.room.findUnique as any).mockResolvedValue(mockRoom as any);
+      (mockDb.booking.findMany as any).mockResolvedValue(mockBookings as any);
+
+      const result = await RoomHandler.single('1');
+
+      expect(result.data).toEqual({
+        ...mockRoom,
+        nextBooking: null,
+        totalBookings: 0
+      });
       expect(result.error).toBeNull();
+      expect(mockDb.room.findUnique).toHaveBeenCalledWith({ where: { id: '1' } });
+      expect(mockDb.booking.findMany).toHaveBeenCalledWith({
+        where: { roomId: '1' },
+        orderBy: { date: 'asc' },
+        include: { user: true }
+      });
     });
 
-    it('deve lidar com sala não encontrada', async () => {
-      const result = await handler.getRoomByIdHandler('999');
-      expect(result).toBeDefined();
+    it('deve retornar erro quando sala não encontrada', async () => {
+      (mockDb.room.findUnique as any).mockResolvedValue(null);
+
+      const result = await RoomHandler.single('999');
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe('Sala não encontrada.');
+    });
+
+    it('deve lidar com erro do Prisma', async () => {
+      (mockDb.room.findUnique as any).mockRejectedValue(new Error('Erro do banco'));
+
+      const result = await RoomHandler.single('1');
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe('Erro interno do servidor');
     });
   });
 
-  describe('updateRoomHandler', () => {
+  describe('update', () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -136,9 +219,25 @@ describe('Room Handler', () => {
         }
       };
 
-      const result = await handler.updateRoomHandler(updateData);
-      expect(result.data).toBeDefined();
+      const mockUpdatedRoom = {
+        id: '1',
+        name: 'Sala Atualizada',
+        size: 25,
+        description: 'Descrição',
+        exclusive: false,
+        status: true
+      };
+
+      (mockDb.room.update as any).mockResolvedValue(mockUpdatedRoom as any);
+
+      const result = await RoomHandler.update(updateData);
+
+      expect(result.data).toEqual(mockUpdatedRoom);
       expect(result.error).toBeNull();
+      expect(mockDb.room.update).toHaveBeenCalledWith({
+        where: { id: '1' },
+        data: updateData.updates
+      });
     });
 
     it('deve atualizar apenas campos fornecidos', async () => {
@@ -149,34 +248,112 @@ describe('Room Handler', () => {
         }
       };
 
-      const result = await handler.updateRoomHandler(updateData);
-      expect(result.data).toBeDefined();
+      const mockUpdatedRoom = {
+        id: '1',
+        name: 'Sala Original',
+        size: 30,
+        description: 'Descrição',
+        exclusive: false,
+        status: true
+      };
+
+      (mockDb.room.update as any).mockResolvedValue(mockUpdatedRoom as any);
+
+      const result = await RoomHandler.update(updateData);
+
+      expect(result.data).toEqual(mockUpdatedRoom);
       expect(result.error).toBeNull();
+      expect(mockDb.room.update).toHaveBeenCalledWith({
+        where: { id: '1' },
+        data: { size: 30 }
+      });
+    });
+
+    it('deve lidar com erro do Prisma', async () => {
+      const updateData: UpdateRoomInput = {
+        id: '1',
+        updates: { name: 'Sala Atualizada' }
+      };
+
+      (mockDb.room.update as any).mockRejectedValue(new Error('Erro do banco'));
+
+      await expect(RoomHandler.update(updateData)).rejects.toThrow('Erro do banco');
     });
   });
 
-  describe('deleteRoomHandler', () => {
+  describe('delete', () => {
     it('deve deletar sala com sucesso', async () => {
-      const result = await handler.deleteRoomHandler('1');
+      const mockDeletedRoom = {
+        id: '1',
+        name: 'Sala Deletada',
+        size: 10,
+        description: 'Descrição',
+        exclusive: false,
+        status: true
+      };
+
+      (mockDb.room.delete as any).mockResolvedValue(mockDeletedRoom as any);
+
+      const result = await RoomHandler.delete('1');
+
+      expect(result.data).toEqual(mockDeletedRoom);
       expect(result.error).toBeNull();
+      expect(mockDb.room.delete).toHaveBeenCalledWith({ where: { id: '1' } });
     });
 
-    it('deve lidar com erro do Supabase', async () => {
-      const result = await handler.deleteRoomHandler('1');
-      expect(result).toBeDefined();
+    it('deve lidar com erro do Prisma', async () => {
+      (mockDb.room.delete as any).mockRejectedValue(new Error('Erro do banco'));
+
+      await expect(RoomHandler.delete('1')).rejects.toThrow('Erro do banco');
     });
   });
 
-  describe('searchRoomHandler', () => {
-    it('deve buscar sala por nome', async () => {
-      const result = await handler.searchRoomHandler('Reunião');
-      expect(result.data).toBeDefined();
+  describe('search', () => {
+    it('deve buscar sala por nome com sucesso', async () => {
+      const mockRooms = [
+        { id: '1', name: 'Sala de Reunião', size: 10, description: 'Descrição', exclusive: false, status: true }
+      ];
+
+      (mockDb.room.findMany as any).mockResolvedValue(mockRooms as any);
+
+      const result = await RoomHandler.search('Reunião');
+
+      expect(result.data).toEqual(mockRooms);
       expect(result.error).toBeNull();
+      expect(mockDb.room.findMany).toHaveBeenCalledWith({
+        where: {
+          name: { contains: 'Reunião', mode: 'insensitive' }
+        }
+      });
     });
 
-    it('deve lidar com erro do Supabase', async () => {
-      const result = await handler.searchRoomHandler('Reunião');
-      expect(result).toBeDefined();
+    it('deve retornar erro quando nome é vazio', async () => {
+      const result = await RoomHandler.search('');
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe('Nome é obrigatório para busca.');
+    });
+
+    it('deve retornar erro quando nome é apenas espaços', async () => {
+      const result = await RoomHandler.search('   ');
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe('Nome é obrigatório para busca.');
+    });
+
+    it('deve retornar erro quando nenhuma sala é encontrada', async () => {
+      (mockDb.room.findMany as any).mockResolvedValue([]);
+
+      const result = await RoomHandler.search('Inexistente');
+
+      expect(result.data).toEqual([]);
+      expect(result.error).toBe('Sala não encontrada.');
+    });
+
+    it('deve lidar com erro do Prisma', async () => {
+      (mockDb.room.findMany as any).mockRejectedValue(new Error('Erro do banco'));
+
+      await expect(RoomHandler.search('Reunião')).rejects.toThrow('Erro do banco');
     });
   });
 });

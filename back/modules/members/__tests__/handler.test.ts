@@ -1,4 +1,4 @@
-import * as handler from '../handler';
+import { MemberHandler } from '../handler';
 import { MemberData, SearchByFilterParams } from '../types';
 
 // Mock do dayjs
@@ -25,49 +25,17 @@ jest.mock('@/utils/errors', () => ({
   default: jest.fn().mockReturnValue('Erro traduzido')
 }));
 
-// Mock do Supabase
-jest.mock('@/config/supabaseClient', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn().mockReturnValue({
-      insert: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: { id: 1, full_name: 'Test Member' }, error: null })
-        })
-      }),
-      select: jest.fn().mockImplementation((fields) => {
-        if (fields === '*' && typeof fields === 'string') {
-          return {
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: { id: 1, full_name: 'Test Member' }, error: null })
-            }),
-            range: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member', birth_date: '1990-01-15' }], error: null, count: 1 }),
-            ilike: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            neq: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            gt: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            gte: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            lt: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            lte: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null }),
-            like: jest.fn().mockResolvedValue({ data: [{ id: 1, full_name: 'Test Member' }], error: null })
-          };
-        }
-        return {
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: { id: 1, full_name: 'Test Member' }, error: null })
-          })
-        };
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: { id: 1, full_name: 'Updated Member' }, error: null })
-          })
-        })
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ error: null })
-      })
-    })
+// Mock do Prisma
+jest.mock('@/config/db', () => ({
+  db: {
+    member: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn()
+    }
   }
 }));
 
@@ -86,21 +54,21 @@ describe('Members Handler', () => {
         email: 'joao@example.com'
       };
 
-      const result = await handler.createMemberHandler(memberData);
+      const result = await MemberHandler.create(memberData);
       expect(result).toBeDefined();
     });
   });
 
   describe('getMembersHandler', () => {
     it('deve executar busca básica', async () => {
-      const result = await handler.getMembersHandler({});
+      const result = await MemberHandler.list({});
       expect(result).toBeDefined();
     });
   });
 
   describe('getMemberByIdHandler', () => {
     it('deve executar busca por ID', async () => {
-      const result = await handler.getMemberByIdHandler('1');
+      const result = await MemberHandler.single('1');
       expect(result).toBeDefined();
     });
   });
@@ -108,21 +76,21 @@ describe('Members Handler', () => {
   describe('updateMemberHandler', () => {
     it('deve executar atualização', async () => {
       const updateData = { full_name: 'João Santos' };
-      const result = await handler.updateMemberHandler('1', updateData);
+      const result = await MemberHandler.update('1', updateData);
       expect(result).toBeDefined();
     });
   });
 
   describe('deleteMemberHandler', () => {
     it('deve executar exclusão', async () => {
-      const result = await handler.deleteMemberHandler('1');
+      const result = await MemberHandler.delete('1');
       expect(result).toBeDefined();
     });
   });
 
   describe('searchMemberHandler', () => {
     it('deve executar busca básica', async () => {
-      const result = await handler.searchMemberHandler('João');
+      const result = await MemberHandler.search('João');
       expect(result).toBeDefined();
     });
   });
@@ -135,7 +103,7 @@ describe('Members Handler', () => {
         operator: 'eq'
       };
 
-      const result = await handler.searchByFilterHandler(params);
+      const result = await MemberHandler.searchByFilter(params);
       expect(result).toBeDefined();
     });
 
@@ -145,7 +113,7 @@ describe('Members Handler', () => {
         // Faltando value e operator
       };
 
-      const result = await handler.searchByFilterHandler(params as SearchByFilterParams);
+      const result = await MemberHandler.searchByFilter(params as SearchByFilterParams);
       expect(result.error).toBe('Parâmetros inválidos.');
     });
 
@@ -156,7 +124,7 @@ describe('Members Handler', () => {
         operator: 'invalid'
       };
 
-      const result = await handler.searchByFilterHandler(params);
+      const result = await MemberHandler.searchByFilter(params);
       expect(result.error).toBe('Operador inválido.');
     });
   });

@@ -7,11 +7,10 @@ import {
   searchMember,
   searchByFilter,
 } from '../controller';
-import * as handler from '../handler';
+import { MemberHandler } from '../handler';
 jest.mock('../handler');
-jest.mock('@/config/supabaseClient');
 
-const mockHandler = handler as jest.Mocked<typeof handler>;
+const mockHandler = MemberHandler as jest.Mocked<typeof MemberHandler>;
 
 describe('Members Controller', () => {
   let mockReq: any;
@@ -40,15 +39,20 @@ describe('Members Controller', () => {
         phone: '11999999999',
         email: 'joao@email.com'
       };
-      const createdMember = { id: 1, ...memberData };
+      const validatedData = {
+        ...memberData,
+        children_count: 0,
+        has_children: false
+      };
+      const createdMember = { id: 1, ...validatedData };
       mockReq.body = memberData;
-      mockHandler.createMemberHandler.mockResolvedValue({ data: createdMember });
+      mockHandler.create.mockResolvedValue({ data: createdMember });
 
       // When
       await createMember(mockReq, mockRes);
 
       // Then
-      expect(mockHandler.createMemberHandler).toHaveBeenCalledWith(memberData);
+      expect(mockHandler.create).toHaveBeenCalledWith(validatedData);
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith(createdMember);
     });
@@ -57,14 +61,14 @@ describe('Members Controller', () => {
       // Given
       const memberData = { full_name: 'João Silva' };
       mockReq.body = memberData;
-      mockHandler.createMemberHandler.mockResolvedValue({ error: 'Data de nascimento é obrigatória.' });
+      // Não precisamos mockar o handler pois o erro vem da validação Zod
 
       // When
       await createMember(mockReq, mockRes);
 
       // Then
       expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Data de nascimento é obrigatória.' });
+      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Required' });
     });
   });
 
@@ -87,13 +91,13 @@ describe('Members Controller', () => {
         hasNext: false,
         hasPrev: false
       };
-      mockHandler.getMembersHandler.mockResolvedValue({ data: membersResult });
+      mockHandler.list.mockResolvedValue({ data: membersResult });
 
       // When
       await getMembers(mockReq, mockRes);
 
       // Then
-      expect(mockHandler.getMembersHandler).toHaveBeenCalledWith({ page: 1, limit: 10 });
+      expect(mockHandler.list).toHaveBeenCalledWith({ page: 1, limit: 10 });
       expect(mockRes.json).toHaveBeenCalledWith({ data: membersResult });
     });
 
@@ -109,18 +113,18 @@ describe('Members Controller', () => {
         hasNext: false, 
         hasPrev: true 
       };
-      mockHandler.getMembersHandler.mockResolvedValue({ data: membersResult });
+      mockHandler.list.mockResolvedValue({ data: membersResult });
 
       // When
       await getMembers(mockReq, mockRes);
 
       // Then
-      expect(mockHandler.getMembersHandler).toHaveBeenCalledWith({ page: 2, limit: 5 });
+      expect(mockHandler.list).toHaveBeenCalledWith({ page: 2, limit: 5 });
     });
 
     it('deve retornar erro quando falha na busca', async () => {
       // Given
-      mockHandler.getMembersHandler.mockResolvedValue({ error: 'Erro ao buscar membros.' });
+      mockHandler.list.mockResolvedValue({ error: 'Erro ao buscar membros.' });
 
       // When
       await getMembers(mockReq, mockRes);
@@ -143,20 +147,20 @@ describe('Members Controller', () => {
         email: 'joao@email.com'
       };
       mockReq.params = { id: '1' };
-      mockHandler.getMemberByIdHandler.mockResolvedValue({ data: member });
+      mockHandler.single.mockResolvedValue({ data: member });
 
       // When
       await getMemberById(mockReq, mockRes);
 
       // Then
-      expect(mockHandler.getMemberByIdHandler).toHaveBeenCalledWith('1');
+      expect(mockHandler.single).toHaveBeenCalledWith('1');
       expect(mockRes.json).toHaveBeenCalledWith(member);
     });
 
     it('deve retornar erro quando membro não encontrado', async () => {
       // Given
       mockReq.params = { id: '999' };
-      mockHandler.getMemberByIdHandler.mockResolvedValue({ error: 'Membro não encontrado.' });
+      mockHandler.single.mockResolvedValue({ error: 'Membro não encontrado.' });
 
       // When
       await getMemberById(mockReq, mockRes);
@@ -181,28 +185,28 @@ describe('Members Controller', () => {
       };
       mockReq.params = { id: '1' };
       mockReq.body = updateData;
-      mockHandler.updateMemberHandler.mockResolvedValue({ data: updatedMember });
+      mockHandler.update.mockResolvedValue({ data: updatedMember });
 
       // When
       await updateMember(mockReq, mockRes);
 
       // Then
-      expect(mockHandler.updateMemberHandler).toHaveBeenCalledWith('1', updateData);
+      expect(mockHandler.update).toHaveBeenCalledWith('1', updateData);
       expect(mockRes.json).toHaveBeenCalledWith(updatedMember);
     });
 
     it('deve retornar erro quando falha na atualização', async () => {
       // Given
       mockReq.params = { id: '1' };
-      mockReq.body = { full_name: '' };
-      mockHandler.updateMemberHandler.mockResolvedValue({ error: 'Nome completo deve ser uma string não vazia.' });
+      mockReq.body = { full_name: 'A' }; // Nome muito curto para falhar na validação
+      // Não precisamos mockar o handler pois o erro vem da validação Zod
 
       // When
       await updateMember(mockReq, mockRes);
 
       // Then
       expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Nome completo deve ser uma string não vazia.' });
+      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Nome completo deve ter pelo menos 2 caracteres.' });
     });
   });
 
@@ -211,20 +215,20 @@ describe('Members Controller', () => {
       // Given
       const deleteResult = { message: 'Membro deletado com sucesso.' };
       mockReq.params = { id: '1' };
-      mockHandler.deleteMemberHandler.mockResolvedValue({ data: deleteResult });
+      mockHandler.delete.mockResolvedValue({ data: deleteResult });
 
       // When
       await deleteMember(mockReq, mockRes);
 
       // Then
-      expect(mockHandler.deleteMemberHandler).toHaveBeenCalledWith('1');
+      expect(mockHandler.delete).toHaveBeenCalledWith('1');
       expect(mockRes.json).toHaveBeenCalledWith(deleteResult);
     });
 
     it('deve retornar erro quando falha na exclusão', async () => {
       // Given
       mockReq.params = { id: '999' };
-      mockHandler.deleteMemberHandler.mockResolvedValue({ error: 'Erro ao deletar membro.' });
+      mockHandler.delete.mockResolvedValue({ error: 'Erro ao deletar membro.' });
 
       // When
       await deleteMember(mockReq, mockRes);
@@ -247,20 +251,20 @@ describe('Members Controller', () => {
         email: 'joao@email.com'
       }];
       mockReq.body = { full_name: 'João' };
-      mockHandler.searchMemberHandler.mockResolvedValue({ data: members });
+      mockHandler.search.mockResolvedValue({ data: members });
 
       // When
       await searchMember(mockReq, mockRes);
 
       // Then
-      expect(mockHandler.searchMemberHandler).toHaveBeenCalledWith('João');
+      expect(mockHandler.search).toHaveBeenCalledWith('João');
       expect(mockRes.json).toHaveBeenCalledWith(members);
     });
 
     it('deve retornar erro quando membro não encontrado', async () => {
       // Given
       mockReq.body = { full_name: 'Inexistente' };
-      mockHandler.searchMemberHandler.mockResolvedValue({ error: 'Membro não encontrado.' });
+      mockHandler.search.mockResolvedValue({ error: 'Membro não encontrado.' });
 
       // When
       await searchMember(mockReq, mockRes);
@@ -284,20 +288,20 @@ describe('Members Controller', () => {
       }];
       const filterParams = { field: 'gender', value: 'Masculino', operator: 'eq' };
       mockReq.body = filterParams;
-      mockHandler.searchByFilterHandler.mockResolvedValue({ data: members });
+      mockHandler.searchByFilter.mockResolvedValue({ data: members });
 
       // When
       await searchByFilter(mockReq, mockRes);
 
       // Then
-      expect(mockHandler.searchByFilterHandler).toHaveBeenCalledWith(filterParams);
+      expect(mockHandler.searchByFilter).toHaveBeenCalledWith(filterParams);
       expect(mockRes.json).toHaveBeenCalledWith(members);
     });
 
     it('deve retornar erro quando filtro inválido', async () => {
       // Given
       mockReq.body = { field: '', value: '', operator: '' };
-      mockHandler.searchByFilterHandler.mockResolvedValue({ error: 'Campo é obrigatório.' });
+      mockHandler.searchByFilter.mockResolvedValue({ error: 'Campo é obrigatório.' });
 
       // When
       await searchByFilter(mockReq, mockRes);

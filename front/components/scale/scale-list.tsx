@@ -22,7 +22,7 @@ import {
 import { SingleScale } from '@/types';
 import { ScaleAdd } from './scale-add';
 import { ScaleEdit } from './scale-edit';
-import { deleteScale } from '@/services/scale.service';
+import { ScaleService } from '@/services/scale.service';
 
 export function ScaleList({ data, refetch, handleNext, handlePrevious, page }: { data: SingleScale[], refetch: () => void, handleNext: () => void, handlePrevious: () => void, page: number }) {
   return (
@@ -48,9 +48,11 @@ export function ScaleList({ data, refetch, handleNext, handlePrevious, page }: {
 const TableList = ({ data, refetch, handleNext, handlePrevious, page }: { data: SingleScale[], refetch: () => void, handleNext: () => void, handlePrevious: () => void, page: number }) => {
   if (!data) return <p>Carregando...</p>
 
+  const deleteScaleMutation = ScaleService.useDelete();
+
   const handleExclude = async (id: string) => {
     try {
-      await deleteScale(id)
+      await deleteScaleMutation.mutateAsync(id)
       refetch()
     } catch (error: any) {
       console.log(error)

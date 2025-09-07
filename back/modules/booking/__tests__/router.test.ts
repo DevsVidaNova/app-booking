@@ -32,7 +32,9 @@ jest.mock('../controller', () => ({
   getBookingMy: jest.fn((req, res) => res.status(200).json({ bookings: [] })),
   getBookingsByToday: jest.fn((req, res) => res.status(200).json({ bookings: [] })),
   getBookingsByWeek: jest.fn((req, res) => res.status(200).json({ bookings: [] })),
-  searchBookingsByDescription: jest.fn((req, res) => res.status(200).json({ bookings: [] }))
+  getBookingsByMonth: jest.fn((req, res) => res.status(200).json({ bookings: [] })),
+  getBookingsByAll: jest.fn((req, res) => res.status(200).json({ bookings: [] })),
+  getBookingsOfCalendar: jest.fn((req, res) => res.status(200).json({ bookings: [] }))
 }));
 
 describe('Booking Router', () => {
@@ -80,18 +82,6 @@ describe('Booking Router', () => {
     });
   });
 
-  describe('GET /booking/search', () => {
-    it('deve buscar reservas por descrição com autenticação', async () => {
-      const response = await request(app)
-        .get('/booking/search')
-        .query({ description: 'reunião' })
-        .expect(200);
-
-      expect(requireAuth).toHaveBeenCalled();
-      expect(controller.searchBookingsByDescription).toHaveBeenCalled();
-      expect(response.body).toEqual({ bookings: [] });
-    });
-  });
 
   describe('GET /booking/my', () => {
     it('deve listar reservas do usuário com autenticação', async () => {
@@ -125,6 +115,42 @@ describe('Booking Router', () => {
 
       expect(publicRoute).toHaveBeenCalled();
       expect(controller.getBookingsByWeek).toHaveBeenCalled();
+      expect(response.body).toEqual({ bookings: [] });
+    });
+  });
+
+  describe('GET /booking/month', () => {
+    it('deve listar reservas do mês como rota pública', async () => {
+      const response = await request(app)
+        .get('/booking/month')
+        .expect(200);
+
+      expect(publicRoute).toHaveBeenCalled();
+      expect(controller.getBookingsByMonth).toHaveBeenCalled();
+      expect(response.body).toEqual({ bookings: [] });
+    });
+  });
+
+  describe('GET /booking/all', () => {
+    it('deve listar todas as reservas como rota pública', async () => {
+      const response = await request(app)
+        .get('/booking/all')
+        .expect(200);
+
+      expect(publicRoute).toHaveBeenCalled();
+      expect(controller.getBookingsByAll).toHaveBeenCalled();
+      expect(response.body).toEqual({ bookings: [] });
+    });
+  });
+
+  describe('GET /booking/calendar', () => {
+    it('deve listar reservas para calendário como rota pública', async () => {
+      const response = await request(app)
+        .get('/booking/calendar')
+        .expect(200);
+
+      expect(publicRoute).toHaveBeenCalled();
+      expect(controller.getBookingsOfCalendar).toHaveBeenCalled();
       expect(response.body).toEqual({ bookings: [] });
     });
   });
@@ -191,10 +217,6 @@ describe('Booking Router', () => {
       await request(app).post('/booking').send({});
       expect(requireAuth).toHaveBeenCalled();
 
-      // GET /booking/search
-      jest.clearAllMocks();
-      await request(app).get('/booking/search');
-      expect(requireAuth).toHaveBeenCalled();
 
       // GET /booking/my
       jest.clearAllMocks();
@@ -240,6 +262,21 @@ describe('Booking Router', () => {
       await request(app).get('/booking/week');
       expect(publicRoute).toHaveBeenCalled();
 
+      // GET /booking/month
+      jest.clearAllMocks();
+      await request(app).get('/booking/month');
+      expect(publicRoute).toHaveBeenCalled();
+
+      // GET /booking/all
+      jest.clearAllMocks();
+      await request(app).get('/booking/all');
+      expect(publicRoute).toHaveBeenCalled();
+
+      // GET /booking/calendar
+      jest.clearAllMocks();
+      await request(app).get('/booking/calendar');
+      expect(publicRoute).toHaveBeenCalled();
+
       // GET /booking/123
       jest.clearAllMocks();
       await request(app).get('/booking/123');
@@ -248,16 +285,6 @@ describe('Booking Router', () => {
   });
 
   describe('Route Order', () => {
-    it('deve priorizar rota /search sobre /:id', async () => {
-      await request(app)
-        .get('/booking/search')
-        .query({ description: 'test' })
-        .expect(200);
-
-      expect(controller.searchBookingsByDescription).toHaveBeenCalled();
-      expect(controller.getBookingById).not.toHaveBeenCalled();
-    });
-
     it('deve priorizar rota /my sobre /:id', async () => {
       await request(app)
         .get('/booking/my')
@@ -282,6 +309,33 @@ describe('Booking Router', () => {
         .expect(200);
 
       expect(controller.getBookingsByWeek).toHaveBeenCalled();
+      expect(controller.getBookingById).not.toHaveBeenCalled();
+    });
+
+    it('deve priorizar rota /month sobre /:id', async () => {
+      await request(app)
+        .get('/booking/month')
+        .expect(200);
+
+      expect(controller.getBookingsByMonth).toHaveBeenCalled();
+      expect(controller.getBookingById).not.toHaveBeenCalled();
+    });
+
+    it('deve priorizar rota /all sobre /:id', async () => {
+      await request(app)
+        .get('/booking/all')
+        .expect(200);
+
+      expect(controller.getBookingsByAll).toHaveBeenCalled();
+      expect(controller.getBookingById).not.toHaveBeenCalled();
+    });
+
+    it('deve priorizar rota /calendar sobre /:id', async () => {
+      await request(app)
+        .get('/booking/calendar')
+        .expect(200);
+
+      expect(controller.getBookingsOfCalendar).toHaveBeenCalled();
       expect(controller.getBookingById).not.toHaveBeenCalled();
     });
 
@@ -325,14 +379,6 @@ describe('Booking Router', () => {
       expect(controller.updateBooking).toHaveBeenCalled();
     });
 
-    it('deve aceitar query parameters para GET /search', async () => {
-      await request(app)
-        .get('/booking/search')
-        .query({ description: 'test query' })
-        .expect(200);
-
-      expect(controller.searchBookingsByDescription).toHaveBeenCalled();
-    });
 
     it('deve aceitar body para POST /filter', async () => {
       await request(app)

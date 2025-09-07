@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button, Input, Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose, Message, Form, FormControl, FormField, FormItem, Checkbox, FormMessage, FormLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/";
-import { addMember } from "@/services/members.service";
+import { MembersService } from "@/services/members.service";
 import { Check } from "lucide-react";
 
 const formSchema = z.object({
@@ -45,6 +45,8 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
       children_count: 0
     }
   });
+
+  const createMemberMutation = MembersService.useCreate();
 
   const cepValue = form.watch("cep");
 
@@ -107,7 +109,7 @@ export function MemberAddForm({ refetch }: { refetch: () => void }) {
     setError("");
     setSuccess("");
     try {
-      const res: any = await addMember(values);
+      const res: any = await createMemberMutation.mutateAsync(values);
       if (res) {
         setSuccess(res.message);
         form.reset();

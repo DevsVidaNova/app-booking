@@ -1,76 +1,39 @@
-import {
-  signUpUserHandler,
-  loginUserHandler,
-  getUserProfileHandler,
-  updateUserProfileHandler,
-  deleteUserHandler,
-  logoutHandler,
-} from "../handler";
+import { AuthHandler } from "../handler";
+import { db } from "@/config/db";
+import bcrypt from "bcryptjs";
 
-const mockAnonClient = {
-  auth: {
-    signInWithPassword: jest.fn().mockResolvedValue({
-      data: { user: { id: "user123" } },
-      error: null,
-    }),
-    signOut: jest.fn().mockResolvedValue({ error: null }),
-  },
-  from: jest.fn().mockReturnValue({
-    select: jest.fn().mockReturnValue({
-      eq: jest.fn().mockReturnValue({
-        single: jest
-          .fn()
-          .mockResolvedValue({
-            data: { id: "1", name: "Test User" },
-            error: null,
-          }),
-      }),
-    }),
-  }),
-};
-import supabaseClient from '@/config/supabaseClient';
-const mockSupabase = supabaseClient;
-
-jest.mock("@/config/supabaseClient", () => ({
-  __esModule: true,
-  default: {
-    auth: {
-      signUp: jest.fn(),
-      admin: {
-        deleteUser: jest.fn(),
-      },
+// Mock do banco de dados
+jest.mock("@/config/db", () => ({
+  db: {
+    user: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
-    from: jest.fn().mockReturnValue({
-      insert: jest.fn().mockResolvedValue({ data: null, error: null }),
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest
-            .fn()
-            .mockResolvedValue({
-              data: { id: "1", name: "Test User" },
-              error: null,
-            }),
-        }),
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          select: jest
-            .fn()
-            .mockResolvedValue({
-              data: [{ id: "1", name: "Updated User" }],
-              error: null,
-            }),
-        }),
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ error: null }),
-      }),
+  },
+}));
+jest.mock("@/utils/jwt", () => ({
+  JWTUtils: {
+    generateToken: jest.fn(() => "jwt-token-123"),
+    verifyToken: jest.fn((token: string) => {
+      if (token === "valid-token") return { userId: "user123", email: "test@example.com", role: "USER" };
+      return null;
     }),
   },
 }));
 
-jest.mock("@/config/supabaseAnonClient", () => ({
-  createSupabaseAnonClient: jest.fn(() => mockAnonClient),
+// Mock do JWTUtils
+const mockJWTUtils = {
+  generateToken: jest.fn(),
+  verifyToken: jest.fn(),
+};
+
+
+// Mock do bcrypt
+jest.mock("bcryptjs", () => ({
+  hash: jest.fn(),
+  compare: jest.fn(),
 }));
 
 describe("Manipulador de Autenticação", () => {
@@ -78,38 +41,29 @@ describe("Manipulador de Autenticação", () => {
     jest.clearAllMocks();
   });
 
-  describe("signUpUserHandler", () => {
+  describe("AuthHandler.signUp", () => {
     it("deve criar usuário com sucesso", async () => {
       // Mock para verificação de email duplicado (deve retornar null para permitir criação)
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: null, error: null }),
-          }),
-        }),
-      });
+      (db.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-      // Mock para signUp
-      (mockSupabase.auth.signUp as jest.Mock).mockResolvedValue({
-        data: { user: { id: "user123" } },
-        error: null,
-      });
+      // Mock para hash da senha
+      (bcrypt.hash as jest.Mock).mockResolvedValue("hashedPassword123");
 
-      // Mock para inserção do perfil
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockResolvedValue({
-            data: [
-              {
-                id: "profile123",
-                name: "Test User",
-                email: "test@example.com",
-              },
-            ],
-            error: null,
-          }),
-        }),
-      });
+      // Mock para criação do usuário
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        password: "hashedPassword123",
+        name: "Test User",
+        phone: "11999999999",
+        role: "USER",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      (db.user.create as jest.Mock).mockResolvedValue(mockUser);
+
+      // Mock para geração do token
+      mockJWTUtils.generateToken.mockReturnValue("jwt-token-123");
 
       const signUpInput = {
         email: "test@example.com",
@@ -118,26 +72,23 @@ describe("Manipulador de Autenticação", () => {
         phone: "11999999999",
       };
 
-      const result = await signUpUserHandler(signUpInput);
+      const result = await AuthHandler.signUp(signUpInput);
+      
       expect(result.user).toBeDefined();
-      expect(result.profile).toBeDefined();
-      expect(result.profile.name).toBe("Test User");
+      expect(result.token).toBe("jwt-token-123");
       expect(result.error).toBeUndefined();
+      expect(result.user.id).toBe("user123");
+      expect(result.user.email).toBe("test@example.com");
+      expect(result.user.name).toBe("Test User");
+      expect(result.user.phone).toBe("11999999999");
+      expect(result.user.password).toBeUndefined(); // Senha não deve estar no retorno
     });
 
     it("deve retornar erro quando email já existe", async () => {
       // Mock para verificação de email duplicado (retorna usuário existente)
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest
-              .fn()
-              .mockResolvedValue({
-                data: { id: "existing-user" },
-                error: null,
-              }),
-          }),
-        }),
+      (db.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "existing-user",
+        email: "existing@example.com",
       });
 
       const signUpInput = {
@@ -147,13 +98,30 @@ describe("Manipulador de Autenticação", () => {
         phone: "11999999999",
       };
 
-      const result = await signUpUserHandler(signUpInput);
+      const result = await AuthHandler.signUp(signUpInput);
+      
       expect(result.error).toBeDefined();
       expect(result.error.message).toBe("Já existe um usuário com este email.");
       expect(result.user).toBeUndefined();
     });
 
     it("deve executar signUp básico", async () => {
+      (db.user.findUnique as jest.Mock).mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue("hashedPassword123");
+      
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        password: "hashedPassword123",
+        name: "Test User",
+        phone: "11999999999",
+        role: "USER",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      (db.user.create as jest.Mock).mockResolvedValue(mockUser);
+      mockJWTUtils.generateToken.mockReturnValue("jwt-token-123");
+
       const signUpInput = {
         email: "test@example.com",
         password: "password123",
@@ -161,179 +129,277 @@ describe("Manipulador de Autenticação", () => {
         phone: "11999999999",
       };
 
-      const result = await signUpUserHandler(signUpInput);
+      const result = await AuthHandler.signUp(signUpInput);
       expect(result).toBeDefined();
     });
   });
 
-  describe("loginUserHandler", () => {
+  describe("AuthHandler.login", () => {
     it("deve fazer login com sucesso", async () => {
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        password: "hashedPassword123",
+        name: "Test User",
+        phone: "11999999999",
+        role: "USER",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      (db.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      
+      mockJWTUtils.generateToken.mockReturnValue("jwt-token-123");
+
       const loginInput = {
         email: "test@example.com",
         password: "password123",
       };
 
-      const result = await loginUserHandler(loginInput);
-      expect(result).toBeDefined();
+      const result = await AuthHandler.login(loginInput);
+      
+      expect(result.user).toBeDefined();
+      expect(result.token).toBe("jwt-token-123");
+      expect(result.error).toBeUndefined();
+      expect(result.user.id).toBe("user123");
+      expect(result.user.email).toBe("test@example.com");
+      expect(result.user.password).toBeUndefined(); // Senha não deve estar no retorno
     });
 
-    it("deve executar login básico", async () => {
+    it("deve retornar erro quando usuário não existe", async () => {
+      (db.user.findUnique as jest.Mock).mockResolvedValue(null);
+
       const loginInput = {
-        email: "test@example.com",
+        email: "nonexistent@example.com",
         password: "password123",
       };
 
-      const result = await loginUserHandler(loginInput);
-      expect(result).toBeDefined();
+      const result = await AuthHandler.login(loginInput);
+      
+      expect(result.error).toBeDefined();
+      expect(result.error.message).toBe("Usuário não encontrado.");
+      expect(result.user).toBeUndefined();
+    });
+
+    it("deve retornar erro quando senha está incorreta", async () => {
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        password: "hashedPassword123",
+        name: "Test User",
+        phone: "11999999999",
+        role: "USER",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      (db.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      const loginInput = {
+        email: "test@example.com",
+        password: "wrongpassword",
+      };
+
+      const result = await AuthHandler.login(loginInput);
+      
+      expect(result.error).toBeDefined();
+      expect(result.error.message).toBe("Senha inválida.");
+      expect(result.user).toBeUndefined();
     });
   });
 
-  describe("getUserProfileHandler", () => {
+  describe("AuthHandler.getProfile", () => {
     it("deve buscar perfil do usuário", async () => {
-      // Mock para buscar perfil existente
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest
-              .fn()
-              .mockResolvedValue({
-                data: { id: "1", name: "Test User" },
-                error: null,
-              }),
-          }),
-        }),
-      });
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        password: "hashedPassword123",
+        name: "Test User",
+        phone: "11999999999",
+        role: "USER",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const result = await getUserProfileHandler("user123");
-      expect(result.profileData).toBeDefined();
+      (db.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+
+      const result = await AuthHandler.getProfile("user123");
+      
+      expect(result.user).toBeDefined();
       expect(result.error).toBeUndefined();
+      expect(result.user.id).toBe("user123");
+      expect(result.user.name).toBe("Test User");
+      expect(result.user.email).toBe("test@example.com");
+      expect(result.user.password).toBeUndefined(); // Senha não deve estar no retorno
     });
 
     it("deve retornar erro quando usuário não existe", async () => {
-      // Mock para usuário não encontrado
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: null, error: null }),
-          }),
-        }),
-      });
+      (db.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-      const result = await getUserProfileHandler("nonexistent");
+      const result = await AuthHandler.getProfile("nonexistent");
+      
       expect(result.error).toBeDefined();
       expect(result.error.message).toBe("Usuário não encontrado.");
-      expect(result.profileData).toBeUndefined();
+      expect(result.user).toBeUndefined();
     });
   });
 
-  describe("updateUserProfileHandler", () => {
+  describe("AuthHandler.updateProfile", () => {
     it("deve atualizar perfil do usuário", async () => {
-      // Mock para verificar se usuário existe
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest
-              .fn()
-              .mockResolvedValue({ data: { id: "1" }, error: null }),
-          }),
-        }),
-      });
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        password: "hashedPassword123",
+        name: "Test User",
+        phone: "11999999999",
+        role: "USER",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      // Mock para atualização
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            select: jest
-              .fn()
-              .mockResolvedValue({
-                data: [{ id: "1", name: "Updated User" }],
-                error: null,
-              }),
-          }),
-        }),
-      });
+      const mockUpdatedUser = {
+        ...mockUser,
+        name: "Updated Name",
+        phone: "11888888888",
+        updatedAt: new Date(),
+      };
+
+      (db.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (db.user.update as jest.Mock).mockResolvedValue(mockUpdatedUser);
 
       const updateInput = {
         name: "Updated Name",
         phone: "11888888888",
       };
 
-      const result = await updateUserProfileHandler("user123", updateInput);
-      expect(result.profile).toBeDefined();
+      const result = await AuthHandler.updateProfile("user123", updateInput);
+      
+      expect(result.user).toBeDefined();
       expect(result.error).toBeUndefined();
+      expect(result.user.id).toBe("user123");
+      expect(result.user.name).toBe("Updated Name");
+      expect(result.user.phone).toBe("11888888888");
+      expect(result.user.password).toBeUndefined(); // Senha não deve estar no retorno
     });
 
     it("deve retornar erro quando usuário não existe", async () => {
-      // Mock para usuário não encontrado
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: null, error: null }),
-          }),
-        }),
-      });
+      (db.user.findUnique as jest.Mock).mockResolvedValue(null);
 
       const updateInput = {
         name: "Updated Name",
         phone: "11888888888",
       };
 
-      const result = await updateUserProfileHandler("nonexistent", updateInput);
+      const result = await AuthHandler.updateProfile("nonexistent", updateInput);
+      
       expect(result.error).toBeDefined();
       expect(result.error.message).toBe("Usuário não encontrado.");
-      expect(result.profile).toBeUndefined();
+      expect(result.user).toBeUndefined();
     });
   });
 
-  describe("deleteUserHandler", () => {
+  describe("AuthHandler.delete", () => {
     it("deve deletar usuário com sucesso", async () => {
-      // Mock para verificar se usuário existe
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest
-              .fn()
-              .mockResolvedValue({ data: { id: "1" }, error: null }),
-          }),
-        }),
-      });
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        password: "hashedPassword123",
+        name: "Test User",
+        phone: "11999999999",
+        role: "USER",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      // Mock para deletar perfil
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        delete: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null }),
-        }),
-      });
+      (db.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (db.user.delete as jest.Mock).mockResolvedValue(mockUser);
 
-      // Mock para deletar usuário do auth
-(mockSupabase.auth.admin.deleteUser as jest.Mock).mockResolvedValue({ error: null });
-
-      const result = await deleteUserHandler("user123");
+      const result = await AuthHandler.delete("user123");
+      
       expect(result.success).toBe(true);
       expect(result.error).toBeUndefined();
     });
 
     it("deve retornar erro quando usuário não existe", async () => {
-      // Mock para usuário não encontrado
-      (mockSupabase.from as jest.Mock).mockReturnValueOnce({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({ data: null, error: null }),
-          }),
-        }),
-      });
+      (db.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-      const result = await deleteUserHandler("nonexistent");
+      const result = await AuthHandler.delete("nonexistent");
+      
       expect(result.error).toBeDefined();
       expect(result.error.message).toBe("Usuário não encontrado.");
       expect(result.success).toBeUndefined();
     });
   });
 
-  describe("logoutHandler", () => {
+  describe("AuthHandler.logout", () => {
     it("deve fazer logout com sucesso", async () => {
-      const result = await logoutHandler();
-      expect(result).toBeDefined();
+      const result = await AuthHandler.logout();
+      
+      expect(result.success).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+  });
+
+  describe("AuthHandler.verifyToken", () => {
+    it("deve verificar token válido com sucesso", async () => {
+      const mockPayload = {
+        userId: "user123",
+        email: "test@example.com",
+        role: "USER",
+      };
+
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        password: "hashedPassword123",
+        name: "Test User",
+        phone: "11999999999",
+        role: "USER",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockJWTUtils.verifyToken.mockReturnValue(mockPayload);
+      (db.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+
+      const result = await AuthHandler.verifyToken("valid-token");
+      
+      expect(result.user).toBeDefined();
+      expect(result.error).toBeUndefined();
+      expect(result.user.id).toBe("user123");
+      expect(result.user.email).toBe("test@example.com");
+      expect(result.user.password).toBeUndefined(); // Senha não deve estar no retorno
+    });
+
+    it("deve retornar erro quando token é inválido", async () => {
+      mockJWTUtils.verifyToken.mockReturnValue(null);
+
+      const result = await AuthHandler.verifyToken("invalid-token");
+      
+      expect(result.error).toBeDefined();
+      expect(result.error.message).toBe("Token inválido ou expirado.");
+      expect(result.user).toBeUndefined();
+    });
+
+    it("deve retornar erro quando usuário não existe", async () => {
+      const mockPayload = {
+        userId: "nonexistent",
+        email: "test@example.com",
+        role: "USER",
+      };
+
+      mockJWTUtils.verifyToken.mockReturnValue(mockPayload);
+      (db.user.findUnique as jest.Mock).mockResolvedValue(null);
+
+      const result = await AuthHandler.verifyToken("valid-token");
+      
+      expect(result.error).toBeDefined();
+      expect(result.error.message).toBe("Usuário não encontrado.");
+      expect(result.user).toBeUndefined();
     });
   });
 });

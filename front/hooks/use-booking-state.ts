@@ -36,7 +36,7 @@ export function useBookingState() {
   }, [])
 
   // Funções para controlar modal de edição
-  const openEditModal = useCallback((booking: ListBooking) => {
+  const openEditModal = useCallback((booking: ListBooking | null) => {
     setSelectedBooking(booking)
     setIsEditModalOpen(true)
   }, [])

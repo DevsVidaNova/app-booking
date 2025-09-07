@@ -1,11 +1,11 @@
-import { getStats } from '../controller';
-import * as handler from '../handler';
+import { getStats } from "../controller";
+import { AnalyticsHandler } from "../handler";
 
 // Mock do handler
-jest.mock('./handler');
-const mockHandler = handler as jest.Mocked<typeof handler>;
+jest.mock("../handler");
+const mockHandler = AnalyticsHandler as jest.Mocked<typeof AnalyticsHandler>;
 
-describe('Analytics Controller', () => {
+describe("Analytics Controller", () => {
   let req: any;
   let res: any;
 
@@ -13,23 +13,23 @@ describe('Analytics Controller', () => {
     req = {};
     res = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
+      json: jest.fn(),
     };
     jest.clearAllMocks();
   });
 
-  describe('getStats', () => {
-    it('should return analytics data successfully', async () => {
+  describe("getStats", () => {
+    it("should return analytics data successfully", async () => {
       // Given
       const mockAnalyticsData = {
         rooms: 10,
         bookings: 25,
         users: 15,
         week: 5,
-        members: 30
+        members: 30,
       };
       mockHandler.getStatsHandler.mockResolvedValue({
-        data: mockAnalyticsData
+        data: mockAnalyticsData,
       });
 
       // When
@@ -41,14 +41,14 @@ describe('Analytics Controller', () => {
       expect(res.json).toHaveBeenCalledWith(mockAnalyticsData);
     });
 
-    it('should handle JSON parseable error', async () => {
+    it("should handle JSON parseable error", async () => {
       // Given
       const errorData = {
-        roomsError: 'Room error',
-        bookingsError: 'Booking error'
+        roomsError: "Room error",
+        bookingsError: "Booking error",
       };
       mockHandler.getStatsHandler.mockResolvedValue({
-        error: JSON.stringify(errorData)
+        error: JSON.stringify(errorData),
       });
 
       // When
@@ -57,16 +57,16 @@ describe('Analytics Controller', () => {
       // Then
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Erro ao buscar estatísticas.',
-        errors: errorData
+        message: "Erro ao buscar estatísticas.",
+        errors: errorData,
       });
     });
 
-    it('should handle non-JSON error', async () => {
+    it("should handle non-JSON error", async () => {
       // Given
-      const errorMessage = 'Simple error message';
+      const errorMessage = "Simple error message";
       mockHandler.getStatsHandler.mockResolvedValue({
-        error: errorMessage
+        error: errorMessage,
       });
 
       // When
@@ -75,15 +75,16 @@ describe('Analytics Controller', () => {
       // Then
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Erro ao buscar estatísticas.',
-        errors: errorMessage
+        message: "Erro ao buscar estatísticas.",
+        errors: errorMessage,
       });
     });
 
-    it('should handle unexpected errors', async () => {
+    it("should handle unexpected errors", async () => {
       // Given
-      mockHandler.getStatsHandler.mockRejectedValue(new Error('Unexpected error'));
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockHandler.getStatsHandler.mockRejectedValue(
+        new Error("Unexpected error")
+      );
 
       // When
       await getStats(req, res);
@@ -91,11 +92,8 @@ describe('Analytics Controller', () => {
       // Then
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Erro ao obter estatísticas.'
+        message: "Erro ao obter estatísticas.",
       });
-      expect(consoleSpy).toHaveBeenCalledWith('Erro ao buscar estatísticas:', expect.any(Error));
-      
-      consoleSpy.mockRestore();
     });
   });
 });

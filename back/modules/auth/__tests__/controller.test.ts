@@ -1,17 +1,9 @@
-import { signUpUser, loginUser, getUserProfile, deleteUser, logout } from '../controller';
-import * as handler from '../handler';
+import { signUpUser, loginUser, getUserProfile, updateUserProfile, deleteUser, logout, verifyToken } from '../controller';
+import { AuthHandler } from '../handler';
 
 // Mock do handler
-jest.mock('../handler', () => ({
-  signUpUserHandler: jest.fn(),
-  loginUserHandler: jest.fn(),
-  getUserProfileHandler: jest.fn(),
-  updateUserProfileHandler: jest.fn(),
-  deleteUserHandler: jest.fn(),
-  logoutHandler: jest.fn()
-}));
-
-const mockHandler = handler as jest.Mocked<typeof handler>;
+jest.mock('../handler');
+const mockHandler = AuthHandler as jest.Mocked<typeof AuthHandler>;
 
 describe('Auth Controller', () => {
   let req: any;
@@ -33,22 +25,25 @@ describe('Auth Controller', () => {
     };
 
     // Default mocks
-    mockHandler.signUpUserHandler.mockResolvedValue({ 
-      user: { id: 'user-123', email: 'test@test.com' },
-      profile: { id: 'profile-123', name: 'Test User', phone: '1234567890' }
+    mockHandler.signUp.mockResolvedValue({ 
+      user: { id: 'user-123', email: 'test@test.com', name: 'Test User', phone: '123456789', role: 'USER' },
+      token: 'token123'
     });
-    mockHandler.loginUserHandler.mockResolvedValue({ 
-      session: { access_token: 'token123' }, 
-      profile: { id: 'profile-123', name: 'Test User' } 
+    mockHandler.login.mockResolvedValue({ 
+      user: { id: 'user-123', email: 'test@test.com', name: 'Test User', phone: '123456789', role: 'USER' }, 
+      token: 'token123'
     });
-    mockHandler.getUserProfileHandler.mockResolvedValue({ 
-      profileData: { id: 'profile-123', name: 'Test User', email: 'test@test.com' } 
+    mockHandler.getProfile.mockResolvedValue({ 
+      user: { id: 'profile-123', name: 'Test User', email: 'test@test.com', phone: '123456789', role: 'USER' } 
     });
-    mockHandler.updateUserProfileHandler.mockResolvedValue({ 
-      profile: { id: 'profile-123', name: 'Updated User', phone: '123456789' } 
+    mockHandler.updateProfile.mockResolvedValue({ 
+      user: { id: 'profile-123', name: 'Updated User', phone: '123456789', email: 'test@test.com', role: 'USER' } 
     });
-    mockHandler.deleteUserHandler.mockResolvedValue({ success: true });
-    mockHandler.logoutHandler.mockResolvedValue({ success: true });
+    mockHandler.delete.mockResolvedValue({ success: true });
+    mockHandler.logout.mockResolvedValue({ success: true });
+    mockHandler.verifyToken.mockResolvedValue({ 
+      user: { id: 'user-123', email: 'test@test.com', name: 'Test User', phone: '123456789', role: 'USER' } 
+    });
   });
 
   describe('signUpUser', () => {
@@ -57,7 +52,7 @@ describe('Auth Controller', () => {
       
       await signUpUser(req, res);
       
-      expect(mockHandler.signUpUserHandler).toHaveBeenCalledWith({
+      expect(mockHandler.signUp).toHaveBeenCalledWith({
         email: 'test@test.com',
         password: 'password123',
         name: 'Test User',
@@ -66,24 +61,24 @@ describe('Auth Controller', () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         message: 'Usuário registrado com sucesso',
-        user: { id: 'user-123', email: 'test@test.com' },
-        profile: { id: 'profile-123', name: 'Test User', phone: '1234567890' }
+        user: { id: 'user-123', email: 'test@test.com', name: 'Test User', phone: '123456789', role: 'USER' },
+        token: 'token123'
       });
     });
 
-    it('should return 400 when required fields are missing', async () => {
-      req.body = { email: 'test@test.com' }; // missing password and name
+    it('should return 400 when validation fails', async () => {
+      req.body = { email: 'invalid-email' }; // invalid email format
       
       await signUpUser(req, res);
       
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Campos obrigatórios ausentes.' });
-      expect(mockHandler.signUpUserHandler).not.toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({ error: expect.any(Array) });
+      expect(mockHandler.signUp).not.toHaveBeenCalled();
     });
 
     it('should return 400 when handler returns error', async () => {
-      req.body = { email: 'test@test.com', password: 'password123', name: 'Test User' };
-      mockHandler.signUpUserHandler.mockResolvedValue({ error: { message: 'Email já existe' } });
+      req.body = { email: 'test@test.com', password: 'password123', name: 'Test User', phone: '1234567890' };
+      mockHandler.signUp.mockResolvedValue({ error: { message: 'Email já existe' } });
       
       await signUpUser(req, res);
       
@@ -98,29 +93,29 @@ describe('Auth Controller', () => {
       
       await loginUser(req, res);
       
-      expect(mockHandler.loginUserHandler).toHaveBeenCalledWith({
+      expect(mockHandler.login).toHaveBeenCalledWith({
         email: 'test@test.com',
         password: 'password123'
       });
       expect(res.json).toHaveBeenCalledWith({
-        session: { access_token: 'token123' },
-        profile: { id: 'profile-123', name: 'Test User' }
+        user: { id: 'user-123', email: 'test@test.com', name: 'Test User', phone: '123456789', role: 'USER' },
+        token: 'token123'
       });
     });
 
-    it('should return 400 when email or password is missing', async () => {
-      req.body = { email: 'test@test.com' }; // missing password
+    it('should return 400 when validation fails', async () => {
+      req.body = { email: 'invalid-email', password: '123' }; // invalid email and short password
       
       await loginUser(req, res);
       
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Email e senha são obrigatórios.' });
-      expect(mockHandler.loginUserHandler).not.toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({ error: expect.any(Array) });
+      expect(mockHandler.login).not.toHaveBeenCalled();
     });
 
     it('should return 401 when handler returns error', async () => {
       req.body = { email: 'test@test.com', password: 'wrongpassword' };
-      mockHandler.loginUserHandler.mockResolvedValue({ error: { message: 'Credenciais inválidas' } });
+      mockHandler.login.mockResolvedValue({ error: { message: 'Credenciais inválidas' } });
       
       await loginUser(req, res);
       
@@ -136,11 +131,15 @@ describe('Auth Controller', () => {
       
       await getUserProfile(req, res);
       
-      expect(mockHandler.getUserProfileHandler).toHaveBeenCalledWith('user-123');
+      expect(mockHandler.getProfile).toHaveBeenCalledWith('user-123');
       expect(res.json).toHaveBeenCalledWith({
-        id: 'profile-123',
-        name: 'Test User',
-        email: 'test@test.com'
+        user: {
+          id: 'profile-123',
+          name: 'Test User',
+          email: 'test@test.com',
+          phone: '123456789',
+          role: 'USER'
+        }
       });
     });
 
@@ -149,11 +148,15 @@ describe('Auth Controller', () => {
       
       await getUserProfile(req, res);
       
-      expect(mockHandler.getUserProfileHandler).toHaveBeenCalledWith('user-123');
+      expect(mockHandler.getProfile).toHaveBeenCalledWith('user-123');
       expect(res.json).toHaveBeenCalledWith({
-        id: 'profile-123',
-        name: 'Test User',
-        email: 'test@test.com'
+        user: {
+          id: 'profile-123',
+          name: 'Test User',
+          email: 'test@test.com',
+          phone: '123456789',
+          role: 'USER'
+        }
       });
     });
 
@@ -165,7 +168,7 @@ describe('Auth Controller', () => {
       
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'ID do usuário não encontrado.' });
-      expect(mockHandler.getUserProfileHandler).not.toHaveBeenCalled();
+      expect(mockHandler.getProfile).not.toHaveBeenCalled();
     });
 
     it('should return 403 when non-admin tries to access other user profile', async () => {
@@ -179,13 +182,13 @@ describe('Auth Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ 
         error: 'Acesso restrito. Somente administradores podem acessar perfis de outros usuários.' 
       });
-      expect(mockHandler.getUserProfileHandler).not.toHaveBeenCalled();
+      expect(mockHandler.getProfile).not.toHaveBeenCalled();
     });
 
     it('should return 400 when handler returns error', async () => {
       req.query.id = 'user-123';
       req.role = 'admin';
-      mockHandler.getUserProfileHandler.mockResolvedValue({ error: { message: 'Usuário não encontrado' } });
+      mockHandler.getProfile.mockResolvedValue({ error: { message: 'Usuário não encontrado' } });
       
       await getUserProfile(req, res);
       
@@ -193,23 +196,21 @@ describe('Auth Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Usuário não encontrado' });
     });
   });
-/*
   describe('updateUserProfile', () => {
     it('should update user profile successfully', async () => {
       req.query.id = 'profile-123';
-      req.body = { name: 'Updated User', phone: '987654321' };
+      req.body = { name: 'Updated User', phone: '(11) 98765-4321' };
       req.role = 'admin';
       
       await updateUserProfile(req, res);
-      console.log(res.json)
       
-      expect(mockHandler.updateUserProfileHandler).toHaveBeenCalledWith('profile-123', {
+      expect(mockHandler.updateProfile).toHaveBeenCalledWith('profile-123', {
         name: 'Updated User',
-        phone: '987654321'
+        phone: '(11) 98765-4321'
       });
       expect(res.json).toHaveBeenCalledWith({
         message: 'Perfil atualizado com sucesso',
-        profile: { id: 'profile-123', name: 'Updated User', phone: '123456789' }
+        user: { id: 'profile-123', name: 'Updated User', phone: '123456789', email: 'test@test.com', role: 'USER' }
       });
     });
 
@@ -221,7 +222,7 @@ describe('Auth Controller', () => {
       
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'ID do usuário não encontrado.' });
-      expect(mockHandler.updateUserProfileHandler).not.toHaveBeenCalled();
+      expect(mockHandler.updateProfile).not.toHaveBeenCalled();
     });
 
     it('should return 403 when non-admin tries to update other user profile', async () => {
@@ -235,14 +236,26 @@ describe('Auth Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ 
         error: 'Acesso restrito. Somente administradores podem acessar perfis de outros usuários.' 
       });
-      expect(mockHandler.updateUserProfileHandler).not.toHaveBeenCalled();
+      expect(mockHandler.updateProfile).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when validation fails', async () => {
+      req.query.id = 'user-123';
+      req.body = { name: '', phone: 'invalid-phone' }; // invalid data
+      req.role = 'admin';
+      
+      await updateUserProfile(req, res);
+      
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: expect.any(Array) });
+      expect(mockHandler.updateProfile).not.toHaveBeenCalled();
     });
 
     it('should return 400 when handler returns error', async () => {
       req.query.id = 'user-123';
       req.body = { name: 'Updated User' };
       req.role = 'admin';
-      mockHandler.updateUserProfileHandler.mockResolvedValue({ error: { message: 'Erro ao atualizar' } });
+      mockHandler.updateProfile.mockResolvedValue({ error: { message: 'Erro ao atualizar' } });
       
       await updateUserProfile(req, res);
       
@@ -250,14 +263,13 @@ describe('Auth Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao atualizar' });
     });
   });
-  */
   describe('deleteUser', () => {
     it('should delete user successfully', async () => {
       req.user.id = 'user-123';
       
       await deleteUser(req, res);
       
-      expect(mockHandler.deleteUserHandler).toHaveBeenCalledWith('user-123');
+      expect(mockHandler.delete).toHaveBeenCalledWith('user-123');
       expect(res.json).toHaveBeenCalledWith({ message: 'Usuário e perfil excluídos com sucesso.' });
     });
 
@@ -268,12 +280,12 @@ describe('Auth Controller', () => {
       
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'ID do usuário não encontrado.' });
-      expect(mockHandler.deleteUserHandler).not.toHaveBeenCalled();
+      expect(mockHandler.delete).not.toHaveBeenCalled();
     });
 
     it('should return 400 when handler returns error', async () => {
       req.user.id = 'user-123';
-      mockHandler.deleteUserHandler.mockResolvedValue({ error: { message: 'Erro ao excluir usuário' } });
+      mockHandler.delete.mockResolvedValue({ error: { message: 'Erro ao excluir usuário' } });
       
       await deleteUser(req, res);
       
@@ -286,17 +298,60 @@ describe('Auth Controller', () => {
     it('should logout successfully', async () => {
       await logout(req, res);
       
-      expect(mockHandler.logoutHandler).toHaveBeenCalled();
+      expect(mockHandler.logout).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({ message: 'Logout realizado com sucesso.' });
     });
 
     it('should return 400 when handler returns error', async () => {
-      mockHandler.logoutHandler.mockResolvedValue({ error: { message: 'Erro ao fazer logout' } });
+      mockHandler.logout.mockResolvedValue({ error: { message: 'Erro ao fazer logout' } });
       
       await logout(req, res);
       
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao fazer logout' });
+    });
+  });
+
+  describe('verifyToken', () => {
+    it('should verify token successfully', async () => {
+      req.headers = { authorization: 'Bearer valid-token' };
+      
+      await verifyToken(req, res);
+      
+      expect(mockHandler.verifyToken).toHaveBeenCalledWith('valid-token');
+      expect(res.json).toHaveBeenCalledWith({
+        user: { id: 'user-123', email: 'test@test.com', name: 'Test User', phone: '123456789', role: 'USER' }
+      });
+    });
+
+    it('should return 401 when token is not provided', async () => {
+      req.headers = {};
+      
+      await verifyToken(req, res);
+      
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Token não fornecido.' });
+      expect(mockHandler.verifyToken).not.toHaveBeenCalled();
+    });
+
+    it('should return 401 when token is invalid', async () => {
+      req.headers = { authorization: 'Bearer invalid-token' };
+      mockHandler.verifyToken.mockResolvedValue({ error: { message: 'Token inválido ou expirado.' } });
+      
+      await verifyToken(req, res);
+      
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Token inválido ou expirado.' });
+    });
+
+    it('should return 400 when handler throws error', async () => {
+      req.headers = { authorization: 'Bearer valid-token' };
+      mockHandler.verifyToken.mockRejectedValue(new Error('JWT error'));
+      
+      await verifyToken(req, res);
+      
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'JWT error' });
     });
   });
 });

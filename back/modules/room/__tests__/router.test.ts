@@ -3,18 +3,20 @@ import express, { Request, Response, NextFunction } from 'express';
 import roomRouter from '../router';
 import * as roomController from '../controller';
 
-// Mock do supabaseClient
-jest.mock('@/config/supabaseClient', () => ({
-  default: {
-    from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      ilike: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null })
-    }))
+// Mock do Prisma
+jest.mock('@/config/db', () => ({
+  db: {
+    room: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn()
+    },
+    booking: {
+      findMany: jest.fn()
+    }
   }
 }));
 

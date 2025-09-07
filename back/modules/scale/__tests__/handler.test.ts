@@ -1,4 +1,4 @@
-import * as handler from '../handler';
+import { ScaleHandler } from '../handler';
 import { ScaleInput } from '../types';
 
 // Mock do dayjs
@@ -23,26 +23,35 @@ jest.mock('dayjs', () => {
 // Mock dos plugins do dayjs
 jest.mock('dayjs/plugin/customParseFormat.js', () => {});
 
-// Mock do Supabase
-jest.mock('@/config/supabaseClient', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn(() => ({
-      insert: jest.fn().mockResolvedValue({ data: null, error: null }),
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      range: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      ilike: jest.fn().mockReturnThis()
-    }))
+// Mock do Prisma
+jest.mock('@/config/db', () => ({
+  db: {
+    scale: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn()
+    }
   }
 }));
 
 describe('Scale Handler', () => {
+  const mockDb = require('@/config/db').db;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Configurar mocks padrão
+    mockDb.scale.findMany.mockResolvedValue([]);
+    mockDb.scale.count.mockResolvedValue(0);
+    mockDb.scale.findUnique.mockResolvedValue(null);
+    mockDb.scale.findFirst.mockResolvedValue(null);
+    mockDb.scale.create.mockResolvedValue({ id: '1', name: 'Test Scale' });
+    mockDb.scale.update.mockResolvedValue({ id: '1', name: 'Updated Scale' });
+    mockDb.scale.delete.mockResolvedValue({ id: '1' });
   });
   const validScaleInput: ScaleInput = {
     date: '15/01/2024',
@@ -61,60 +70,72 @@ describe('Scale Handler', () => {
     dynamic: 'Camila Ferreira'
   };
 
-  describe('createScaleHandler', () => {
+  describe('ScaleHandler.create', () => {
     it('deve criar uma escala com sucesso', async () => {
-      const result = await handler.createScaleHandler(validScaleInput);
+      const result = await ScaleHandler.create(validScaleInput);
       expect(result).toEqual({ data: null });
     });
   });
 
-  describe('getScalesHandler', () => {
+  describe('ScaleHandler.list', () => {
     it('deve retornar escalas com paginação padrão', async () => {
-      const result = await handler.getScalesHandler({});
+      // Mock específico para este teste
+      mockDb.scale.findMany.mockResolvedValue([
+        { id: '1', name: 'Escala 1', date: new Date('2024-01-15') }
+      ]);
+      mockDb.scale.count.mockResolvedValue(1);
+
+      const result = await ScaleHandler.list({});
       expect(result.data).toBeDefined();
       expect(result.data?.pagination).toBeDefined();
     });
 
     it('deve retornar escalas com paginação customizada', async () => {
-      const result = await handler.getScalesHandler({ page: 2, pageSize: 1 });
+      // Mock específico para este teste
+      mockDb.scale.findMany.mockResolvedValue([
+        { id: '2', name: 'Escala 2', date: new Date('2024-01-15') }
+      ]);
+      mockDb.scale.count.mockResolvedValue(1);
+
+      const result = await ScaleHandler.list({ page: 2, pageSize: 1 });
       expect(result.data).toBeDefined();
       expect(result.data?.pagination.page).toBe(2);
       expect(result.data?.pagination.pageSize).toBe(1);
     });
   });
 
-  describe('getScaleByIdHandler', () => {
+  describe('ScaleHandler.single', () => {
     it('deve buscar escala por ID', async () => {
-      const result = await handler.getScaleByIdHandler('1');
+      const result = await ScaleHandler.single('1');
       expect(result).toBeDefined();
     });
   });
 
-  describe('updateScaleHandler', () => {
+  describe('ScaleHandler.update', () => {
     it('deve atualizar escala com sucesso', async () => {
       const updates = { name: 'Escala Atualizada' };
-      const result = await handler.updateScaleHandler('1', updates);
+      const result = await ScaleHandler.update('1', updates);
       expect(result).toBeDefined();
     });
   });
 
-  describe('deleteScaleHandler', () => {
+  describe('ScaleHandler.delete', () => {
     it('deve deletar escala com sucesso', async () => {
-      const result = await handler.deleteScaleHandler('1');
+      const result = await ScaleHandler.delete('1');
       expect(result).toBeDefined();
     });
   });
 
-  describe('searchScaleHandler', () => {
+  describe('ScaleHandler.search', () => {
     it('deve buscar escalas por nome', async () => {
-      const result = await handler.searchScaleHandler('Domingo');
+      const result = await ScaleHandler.search('Domingo');
       expect(result).toBeDefined();
     });
   });
 
-  describe('duplicateScaleHandler', () => {
+  describe('ScaleHandler.duplicate', () => {
     it('deve duplicar escala com sucesso', async () => {
-      const result = await handler.duplicateScaleHandler('1');
+      const result = await ScaleHandler.duplicate('1');
       expect(result).toBeDefined();
     });
   });

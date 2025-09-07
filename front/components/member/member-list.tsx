@@ -2,7 +2,7 @@
 import { EllipsisVertical, Trash } from 'lucide-react';
 import { ListMember, SingleMember } from '@/types';
 import { MemberAddForm } from './member-add';
-import { deleteMember } from '@/services/members.service';
+import { MembersService } from '@/services/members.service';
 import  Pagination from '@/components/pagination/';
 
 import {
@@ -45,9 +45,11 @@ export function MemberList({ users, refetch, setpage, page }: { readonly users: 
 }
 
 const CardMember = ({ user, refetch }: { readonly user: SingleMember, readonly refetch: () => void }) => {
+  const deleteMemberMutation = MembersService.useDelete();
+
   const handleExclude = async (id: string) => {
     try {
-      await deleteMember(id)
+      await deleteMemberMutation.mutateAsync(id)
       toast.success('Membro excluído com sucesso')
       refetch()
     } catch (error: any) {

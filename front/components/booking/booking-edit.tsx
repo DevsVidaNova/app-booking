@@ -24,7 +24,7 @@ import { toast } from 'sonner'
 dayjs.extend(customParseFormat)
 
 interface BookingEditFormProps {
-    booking: ListBooking
+    booking: ListBooking | null
     isOpen?: boolean
     onClose?: () => void
 }
@@ -60,12 +60,12 @@ export function BookingEdit({ booking, isOpen = false, onClose }: BookingEditFor
     };
 
     const formDefaultValues: Partial<BookingFormData> = {
-        description: booking.description,
-        room_id: booking.room?.id?.toString() || '',
-        date: formatDateForInput(booking.date),
-        start_time: booking.start_time,
-        end_time: booking.end_time,
-        repeat: booking.repeat || 'none',
+        description: booking?.description || '',
+        room_id: booking?.room?.id?.toString() || '',
+        date: formatDateForInput(booking?.date || null),
+        start_time: booking?.start_time || '',
+        end_time: booking?.end_time || '',
+        repeat: booking?.repeat || 'none',
     }
 
     async function onSubmit(values: BookingFormData) {
@@ -92,7 +92,7 @@ export function BookingEdit({ booking, isOpen = false, onClose }: BookingEditFor
             }
             
             await updateMutation.mutateAsync({
-                id: booking.id.toString(),
+                id: booking?.id?.toString() || '',
                 data: bookingData
             })
             
@@ -127,7 +127,7 @@ export function BookingEdit({ booking, isOpen = false, onClose }: BookingEditFor
                         <DrawerHeader>
                             <DrawerTitle>Editar Reserva de Sala</DrawerTitle>
                             <DrawerDescription>
-                                Modifique os detalhes da reserva para {booking.room?.name || 'a sala selecionada'}.
+                                Modifique os detalhes da reserva para {booking?.room?.name || 'a sala selecionada'}.
                             </DrawerDescription>
                         </DrawerHeader>
                         

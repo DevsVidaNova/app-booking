@@ -56,19 +56,20 @@ export const RoomHandler = {
         interface BookingData {
           id: string;
           description: string;
-          date: string | null;
+          date: Date | string | null;
           startTime: string;
           endTime: string;
-          repeat: boolean;
-          dayRepeat: string | null;
+          repeat: any;
+          dayRepeat: any;
           user?: BookingUser | null;
         }
 
-        const futureBookings: BookingData[] = bookingsData.filter((booking: BookingData) => {
+        const futureBookings: any[] = bookingsData.filter((booking: any) => {
           if (booking.repeat) return true;
           if (booking.date) {
-            if (booking.date > today) return true;
-            if (booking.date === today && booking.startTime > currentTime) return true;
+            const bookingDate = booking.date instanceof Date ? booking.date.toISOString().split('T')[0] : booking.date;
+            if (bookingDate > today) return true;
+            if (bookingDate === today && booking.startTime > currentTime) return true;
           }
           return false;
         });
@@ -77,7 +78,9 @@ export const RoomHandler = {
             if (a.repeat && !b.repeat) return -1;
             if (!a.repeat && b.repeat) return 1;
             if (a.date && b.date) {
-              if (a.date !== b.date) return a.date.localeCompare(b.date);
+              const dateA = a.date instanceof Date ? a.date.toISOString().split('T')[0] : a.date as string;
+              const dateB = b.date instanceof Date ? b.date.toISOString().split('T')[0] : b.date as string;
+              if (dateA !== dateB) return dateA.localeCompare(dateB);
               return a.startTime.localeCompare(b.startTime);
             }
             return a.startTime.localeCompare(b.startTime);
@@ -108,7 +111,6 @@ export const RoomHandler = {
         error: null
       };
     } catch (err) {
-      console.error("Erro ao buscar sala com agendamentos:", err);
       return { data: null, error: "Erro interno do servidor" };
     }
   },

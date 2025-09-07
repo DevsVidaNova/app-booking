@@ -4,8 +4,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import { BookingFormBase, BookingFormData } from './booking-form-base'
-import { BookingsService } from "@/services/booking.service"
-import { toast } from 'sonner'
+import { addBooking } from "@/services/booking.service"
 
 interface BookingAddPopupProps {
     isOpen: boolean
@@ -17,7 +16,6 @@ interface BookingAddPopupProps {
 
 export function BookingAddPopup({ isOpen, onClose, refetch, selectedDate, selectedTime }: BookingAddPopupProps) {
     const [isLoading, setIsLoading] = useState(false)
-    const createMutation = BookingsService.useCreate()
 
     const defaultValues: Partial<BookingFormData> = {
         description: "",
@@ -31,22 +29,13 @@ export function BookingAddPopup({ isOpen, onClose, refetch, selectedDate, select
     async function onSubmit(values: BookingFormData) {
         setIsLoading(true)
         try {
-            const payload = {
-                description: values?.description,
-                room: values.room_id,
-                date: values.date ?? undefined,
-                start_time: values.start_time,
-                end_time: values.end_time,
-                repeat: values.repeat === "null" ? null : values.repeat,
-                day_repeat: values.repeat === "null" ? null : undefined,
+            const response = await addBooking(values)
+            if (response) {
+                onClose()
+                refetch()
             }
-            
-            await createMutation.mutateAsync(payload)
-            toast.success("✅ Reserva feita com sucesso!")
-            onClose()
-            refetch()
-        } catch (err: any) {
-            toast.error(err.message)
+        } catch (error) {
+            console.error("Erro ao criar reserva:", error)
         } finally {
             setIsLoading(false)
         }

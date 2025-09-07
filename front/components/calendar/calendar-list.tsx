@@ -11,11 +11,11 @@ import interactionPlugin from "@fullcalendar/interaction";
 import ptBrLocale from "@fullcalendar/core/locales/pt-br";
 import { addDays, addMonths, isBefore } from "date-fns";
 
-import { listBookings } from "@/services/booking.service";
-import { listRooms } from "@/services/rooms.service";
+import { BookingsService } from "@/services/booking.service";
+import { RoomsService } from "@/services/rooms.service";
 import { ListBooking } from "@/types";
-import { BookingAddPopup } from "../booking/booking-add-popup";
-import { BookingEditPopup } from "../booking/booking-edit-popup";
+import { BookingAdd } from "../booking/booking-add";
+import { BookingEdit } from "../booking/booking-edit";
 
 import { Loader, Menu } from "lucide-react";
 
@@ -92,7 +92,7 @@ export default function CalendarList() {
     isLoading
   } = useQuery<ListBooking[]>({
     queryKey: ["bookings list"],
-    queryFn: listBookings
+    queryFn: BookingsService.useList,
   });
 
   const refetchBookings = async () => {
@@ -228,7 +228,7 @@ export default function CalendarList() {
         </div>
         <div className="p-4">
           <FullCalendar
-            key={bookings?.length}
+            key={bookings?.data?.length}
             ref={calendarRef}
             headerToolbar={false}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -329,8 +329,8 @@ export default function CalendarList() {
             allDaySlot={false}
           />
 
-          {selectDate && <BookingAddPopup start={selectDate.start} end={selectDate.end} onClose={() => setSelectDate(null)} onSaved={() => refetchBookings()} />}
-          {selectedBooking && <BookingEditPopup booking={selectedBooking} onClose={() => setSelectedBooking(null)} onSaved={() => refetchBookings()} />}
+          {selectDate && <BookingAdd start={selectDate.start} end={selectDate.end} onClose={() => setSelectDate(null)} onSaved={() => refetchBookings()} />}
+          {selectedBooking && <BookingEdit booking={selectedBooking} onClose={() => setSelectedBooking(null)} onSaved={() => refetchBookings()} />}
         </div>
       </main>
     </SidebarProvider>
@@ -399,7 +399,7 @@ function CalendarSidebarContent({ selectedRooms, toggleRoom }: { readonly select
   const { data: rooms, isLoading } = useQuery({
     queryKey: [`list rooms ${page}`],
     queryFn: async () => {
-      return await listRooms(page);
+      return await RoomsService.useList(page);
     },
     placeholderData: previousData => previousData
   });

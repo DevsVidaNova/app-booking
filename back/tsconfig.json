@@ -18,5 +18,6 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["modules/**/*", "config/**/*", "utils/**/*", "server.ts"]
+  "include": ["modules/**/*", "config/**/*", "utils/**/*", "server.ts"],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
 }

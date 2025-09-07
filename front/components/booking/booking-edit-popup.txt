@@ -4,13 +4,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2 } from "lucide-react";
 import { BookingFormBase, BookingFormData } from './booking-form-base';
-import { BookingsService } from "@/services/booking.service";
+import { editBooking, deleteBooking } from "@/services/booking.service";
 import { ListBooking } from "@/types";
-import { toast } from 'sonner';
-import dayjs from 'dayjs'
-import customParseFormat from 'dayjs/plugin/customParseFormat'
-
-dayjs.extend(customParseFormat)
 
 interface BookingEditPopupProps {
     isOpen: boolean;
@@ -22,29 +17,13 @@ interface BookingEditPopupProps {
 export function BookingEditPopup({ isOpen, onClose, refetch, booking }: BookingEditPopupProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const updateMutation = BookingsService.useUpdate()
-    const deleteMutation = BookingsService.useDelete()
-
-    // Converter data de DD/MM/YYYY para YYYY-MM-DD para o input date HTML
-    const formatDateForInput = (dateStr: string | null): string => {
-        if (!dateStr || dateStr === 'null') return '';
-        
-        // Tentar parsear nos formatos possíveis e converter para YYYY-MM-DD
-        const date = dayjs(dateStr, ['DD/MM/YYYY', 'YYYY-MM-DD'], true);
-        
-        if (date.isValid()) {
-            return date.format('YYYY-MM-DD');
-        }
-        
-        return '';
-    };
 
     const defaultValues: Partial<BookingFormData> = {
         description: booking?.description || "",
         room_id: booking?.room?.id?.toString() || "",
         start_time: booking?.start_time || "",
         end_time: booking?.end_time || "",
-        date: formatDateForInput(booking?.date || null),
+        date: booking?.date || "",
         repeat: booking?.repeat || "none",
     };
 
@@ -54,35 +33,23 @@ export function BookingEditPopup({ isOpen, onClose, refetch, booking }: BookingE
         setIsLoading(true);
         try {
             // Transformar os dados para o formato esperado pela API
-            // Converter data para DD/MM/YYYY (formato esperado pelo backend)
-            let formattedDate = null;
-            if (values.date && values.date.trim() !== '') {
-                const date = dayjs(values.date, ['YYYY-MM-DD', 'DD/MM/YYYY'], true);
-                
-                if (date.isValid()) {
-                    formattedDate = date.format('DD/MM/YYYY');
-                }
-            }
-
             const bookingData = {
                 description: values.description,
                 room_id: parseInt(values.room_id),
-                date: formattedDate,
+                date: values.date,
                 start_time: values.start_time,
                 end_time: values.end_time,
                 repeat: values.repeat === 'none' ? null : values.repeat,
+                day_repeat: values.day_repeat || null,
+            };
+            
+            const response = await editBooking(booking.id.toString(), bookingData);
+            if (response) {
+                onClose();
+                refetch();
             }
-            
-            await updateMutation.mutateAsync({
-                id: booking.id.toString(),
-                data: bookingData
-            })
-            
-            toast.success('Reserva editada com sucesso!')
-            onClose();
-            refetch();
-        } catch (error: any) {
-            toast.error(error.message || 'Erro ao editar reserva')
+        } catch (error) {
+            console.error("Erro ao editar reserva:", error);
         } finally {
             setIsLoading(false);
         }
@@ -95,12 +62,11 @@ export function BookingEditPopup({ isOpen, onClose, refetch, booking }: BookingE
         
         setIsDeleting(true);
         try {
-            await deleteMutation.mutateAsync(booking.id.toString())
-            toast.success('Reserva excluída com sucesso!')
+            await deleteBooking(booking.id);
             onClose();
             refetch();
-        } catch (error: any) {
-            toast.error(error.message || 'Erro ao excluir reserva')
+        } catch (error) {
+            console.error("Erro ao excluir reserva:", error);
         } finally {
             setIsDeleting(false);
         }

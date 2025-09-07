@@ -20,14 +20,11 @@ import {
     Button, Message,
 } from "@/components/ui"
 
-import { useQuery } from "@tanstack/react-query"
-
 import { CalendarSearch, CalendarX2, Pencil, } from "lucide-react"
 
-
 import { ListUser } from "@/types"
-import { listUsers } from "@/services/user.service"
-import { addScale } from "@/services/scale.service"
+import { UserService } from "@/services/user.service"
+import { ScaleService } from "@/services/scale.service"
 import { Combobox } from '@/components/ui/combobox';
 
 const formSchema = z
@@ -107,23 +104,20 @@ export function ScaleEdit({ id, refetch, defaultValues }: { refetch: () => void,
     })
     const [openCalendar, setOpenCalendar] = useState(false);
 
-    const { data: users, error: errorUsers, isLoading, } = useQuery<ListUser[]>({
-        queryKey: ['list users'],
-        queryFn: listUsers
-    });
+    const { data: users, error: errorUsers, isLoading, } = UserService.useList(1);
+
+    const updateScaleMutation = ScaleService.useUpdate();
 
     const [success, setsuccess] = useState('');
     const [error, seterror] = useState('');
-
-
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setsuccess('');
         seterror('');
         try {
-            const res = await addScale(values);
+            const res = await updateScaleMutation.mutateAsync({ id, data: values });
             if (res) {
-                setsuccess('Reserva feita com sucesso!');
+                setsuccess('Escala atualizada com sucesso!');
                 refetch();
                 setTimeout(() => {
                     setsuccess('');
@@ -232,7 +226,7 @@ export function ScaleEdit({ id, refetch, defaultValues }: { refetch: () => void,
                                                         value={field.value}
                                                         onValueChange={field.onChange}
                                                         placeholder="Selecione uma pessoa"
-                                                        options={users || []}
+                                                        options={(users?.data || []) as { id: string; name: string; }[]}
                                                     />
                                                     <FormMessage />
                                                 </FormItem>

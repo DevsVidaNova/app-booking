@@ -19,7 +19,9 @@ import {
 import Link from "next/link"
 import { ListBooking } from "@/types";
 import { BookingsService } from '@/services/booking.service';
-import { useBookingState, BookingAddPopup, BookingEditPopup } from './index';
+import { BookingAdd } from './booking-add';
+import { BookingEdit } from './booking-edit';
+import { useBookingState } from '@/hooks/use-booking-state';
 import { useState, useEffect } from 'react';
 
 export function BookingList() {
@@ -111,18 +113,15 @@ export function BookingList() {
             </div>
 
             {/* Modais */}
-            <BookingAddPopup
-                isOpen={isAddModalOpen}
-                onClose={closeAddModal}
-                refetch={refetch}
-            />
+            <BookingAdd />
 
-            <BookingEditPopup
-                isOpen={isEditModalOpen}
-                onClose={closeEditModal}
-                refetch={refetch}
-                booking={selectedBooking}
-            />
+            {selectedBooking && (
+                <BookingEdit
+                    isOpen={isEditModalOpen}
+                    onClose={closeEditModal}
+                    booking={selectedBooking}
+                />
+            )}
         </div>
     )
 }
@@ -158,12 +157,12 @@ const BookingItem = ({ data, onEdit }: { data: ListBooking[], onEdit: (booking: 
                                     </div>
                                     <div className='flex-row flex gap-2 items-center opacity-70'>
                                         <User size={12} />
-                                        <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{user?.name.length > 16 ? user?.name.slice(0, 16) + '...' : user?.name}</span>
+                                        <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{user?.name && user.name.length > 16 ? user.name.slice(0, 16) + '...' : user?.name}</span>
                                     </div>
                                 </div>
                                 <div className='flex-row flex gap-2 items-center opacity-70'>
                                     <MapPin size={12} />
-                                    <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{room?.name} - {description?.length > 24 ? description?.slice(0, 21) + '...' : description}</span>
+                                    <span className='text-[12px] md:text-[18px] md:leading-[24px] leading-[12px]'>{room?.name} - {description && description.length > 24 ? description.slice(0, 21) + '...' : description}</span>
                                 </div>
                             </div>
                         </div>

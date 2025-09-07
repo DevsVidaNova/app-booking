@@ -7,20 +7,22 @@ import {
   deleteRoom,
   searchRoom
 } from '../controller';
-import * as handler from '../handler';
+import { RoomHandler } from '../handler';
 
-// Mock do supabaseClient
-jest.mock('@/config/supabaseClient', () => ({
-  default: {
-    from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      ilike: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null })
-    }))
+// Mock do Prisma
+jest.mock('@/config/db', () => ({
+  db: {
+    room: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn()
+    },
+    booking: {
+      findMany: jest.fn()
+    }
   }
 }));
 
@@ -38,7 +40,7 @@ jest.mock('dayjs', () => {
 
 // Mock do handler
 jest.mock('../handler');
-const mockHandler = handler as jest.Mocked<typeof handler>;
+const mockRoomHandler = RoomHandler as jest.Mocked<typeof RoomHandler>;
 
 describe('Room Controller', () => {
   let mockRequest: Partial<Request>;
@@ -66,48 +68,64 @@ describe('Room Controller', () => {
         size: 10,
         description: 'Sala para reuniões',
         exclusive: false,
-        status: 'ativa'
+        status: true
       };
 
       const mockResult = {
-        data: { id: 1, ...roomData },
+        data: { id: '1', ...roomData },
         error: null
       };
 
       mockRequest.body = roomData;
-      mockHandler.createRoomHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.create.mockResolvedValue(mockResult as any);
 
       await createRoom(mockRequest as Request, mockResponse as Response);
 
-      expect(mockHandler.createRoomHandler).toHaveBeenCalledWith(roomData);
+      expect(mockRoomHandler.create).toHaveBeenCalledWith(roomData);
       expect(mockStatus).toHaveBeenCalledWith(201);
       expect(mockJson).toHaveBeenCalledWith(mockResult.data);
     });
 
     it('deve retornar erro 400 quando há erro na criação', async () => {
       const roomData = { name: '' };
-      const mockResult = {
-        data: null,
-        error: 'Nome da sala é obrigatório.'
+      const expectedError = {
+        error: 'Dados inválidos',
+        details: [
+          {
+            field: 'name',
+            message: 'Nome da sala é obrigatório'
+          },
+          {
+            field: 'name',
+            message: 'Nome não pode ser apenas espaços'
+          }
+        ]
       };
 
       mockRequest.body = roomData;
-      mockHandler.createRoomHandler.mockResolvedValue(mockResult);
+      // Não precisamos mockar o handler pois o erro vem da validação Zod
 
       await createRoom(mockRequest as Request, mockResponse as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({ error: mockResult.error });
+      expect(mockJson).toHaveBeenCalledWith(expectedError);
     });
   });
 
   describe('getRooms', () => {
     it('deve listar salas com paginação padrão', async () => {
       const mockResult = {
-        data: [{ id: 1, name: 'Sala 1' }],
-        total: 1,
+        data: [{ 
+          id: '1', 
+          name: 'Sala 1',
+          size: 10,
+          description: 'Descrição da sala',
+          exclusive: false,
+          status: true
+        }],
+        limit: 10,
+        offset: 0,
         page: 1,
-        to: 1,
         totalPages: 1,
         hasNext: false,
         hasPrev: false,
@@ -115,16 +133,15 @@ describe('Room Controller', () => {
       };
 
       mockRequest.query = {};
-      mockHandler.getRoomsHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.list.mockResolvedValue(mockResult as any);
 
       await getRooms(mockRequest as Request, mockResponse as Response);
 
-      expect(mockHandler.getRoomsHandler).toHaveBeenCalledWith(1, 10);
+      expect(mockRoomHandler.list).toHaveBeenCalledWith(1, 10);
       expect(mockJson).toHaveBeenCalledWith({
         data: mockResult.data,
-        total: mockResult.total,
+        offset: mockResult.offset,
         page: mockResult.page,
-        to: mockResult.to,
         totalPages: mockResult.totalPages,
         hasNext: mockResult.hasNext,
         hasPrev: mockResult.hasPrev
@@ -133,10 +150,17 @@ describe('Room Controller', () => {
 
     it('deve listar salas com paginação customizada', async () => {
       const mockResult = {
-        data: [{ id: 1, name: 'Sala 1' }],
-        total: 25,
+        data: [{ 
+          id: '1', 
+          name: 'Sala 1',
+          size: 10,
+          description: 'Descrição da sala',
+          exclusive: false,
+          status: true
+        }],
+        limit: 5,
+        offset: 5,
         page: 2,
-        to: 5,
         totalPages: 5,
         hasNext: true,
         hasPrev: true,
@@ -144,16 +168,15 @@ describe('Room Controller', () => {
       };
 
       mockRequest.query = { page: '2', limit: '5' };
-      mockHandler.getRoomsHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.list.mockResolvedValue(mockResult as any);
 
       await getRooms(mockRequest as Request, mockResponse as Response);
 
-      expect(mockHandler.getRoomsHandler).toHaveBeenCalledWith(2, 5);
+      expect(mockRoomHandler.list).toHaveBeenCalledWith(2, 5);
       expect(mockJson).toHaveBeenCalledWith({
         data: mockResult.data,
-        total: mockResult.total,
+        offset: mockResult.offset,
         page: mockResult.page,
-        to: mockResult.to,
         totalPages: mockResult.totalPages,
         hasNext: mockResult.hasNext,
         hasPrev: mockResult.hasPrev
@@ -163,9 +186,9 @@ describe('Room Controller', () => {
     it('deve retornar erro 500 quando há erro no handler', async () => {
       const mockResult = {
         data: null,
-        total: null,
+        limit: 10,
+        offset: 0,
         page: 1,
-        to: 0,
         totalPages: 0,
         hasNext: false,
         hasPrev: false,
@@ -173,7 +196,7 @@ describe('Room Controller', () => {
       };
 
       mockRequest.query = {};
-      mockHandler.getRoomsHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.list.mockResolvedValue(mockResult as any);
 
       await getRooms(mockRequest as Request, mockResponse as Response);
 
@@ -184,18 +207,27 @@ describe('Room Controller', () => {
 
   describe('getRoomById', () => {
     it('deve retornar uma sala por ID', async () => {
-      const mockRoom = { id: 1, name: 'Sala 1' };
+      const mockRoom = { 
+        id: '1', 
+        name: 'Sala 1',
+        size: 10,
+        description: 'Descrição da sala',
+        exclusive: false,
+        status: true,
+        nextBooking: null,
+        totalBookings: 0
+      };
       const mockResult = {
         data: mockRoom,
         error: null
       };
 
       mockRequest.params = { id: '1' };
-      mockHandler.getRoomByIdHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.single.mockResolvedValue(mockResult as any);
 
       await getRoomById(mockRequest as Request, mockResponse as Response);
 
-      expect(mockHandler.getRoomByIdHandler).toHaveBeenCalledWith('1');
+      expect(mockRoomHandler.single).toHaveBeenCalledWith('1');
       expect(mockJson).toHaveBeenCalledWith(mockRoom);
     });
 
@@ -206,7 +238,7 @@ describe('Room Controller', () => {
       };
 
       mockRequest.params = { id: '999' };
-      mockHandler.getRoomByIdHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.single.mockResolvedValue(mockResult as any);
 
       await getRoomById(mockRequest as Request, mockResponse as Response);
 
@@ -219,51 +251,74 @@ describe('Room Controller', () => {
     it('deve atualizar uma sala com sucesso', async () => {
       const updates = { name: 'Sala Atualizada' };
       const mockResult = {
-        data: { id: 1, name: 'Sala Atualizada' },
+        data: { 
+          id: '1', 
+          name: 'Sala Atualizada',
+          size: 10,
+          description: 'Descrição da sala',
+          exclusive: false,
+          status: true
+        },
         error: null
       };
 
       mockRequest.params = { id: '1' };
       mockRequest.body = updates;
-      mockHandler.updateRoomHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.update.mockResolvedValue(mockResult as any);
 
       await updateRoom(mockRequest as Request, mockResponse as Response);
 
-      expect(mockHandler.updateRoomHandler).toHaveBeenCalledWith({ id: '1', updates });
+      expect(mockRoomHandler.update).toHaveBeenCalledWith({ id: '1', updates });
       expect(mockJson).toHaveBeenCalledWith(mockResult.data);
     });
 
     it('deve retornar erro 400 quando há erro na atualização', async () => {
       const updates = { name: '' };
-      const mockResult = {
-        data: null,
-        error: 'Nome da sala deve ser uma string não vazia.'
+      const expectedError = {
+        error: 'Dados inválidos',
+        details: [
+          {
+            field: 'name',
+            message: 'Nome da sala deve ser uma string não vazia'
+          },
+          {
+            field: 'name',
+            message: 'Nome não pode ser apenas espaços'
+          }
+        ]
       };
 
       mockRequest.params = { id: '1' };
       mockRequest.body = updates;
-      mockHandler.updateRoomHandler.mockResolvedValue(mockResult);
+      // Não precisamos mockar o handler pois o erro vem da validação Zod
 
       await updateRoom(mockRequest as Request, mockResponse as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({ error: mockResult.error });
+      expect(mockJson).toHaveBeenCalledWith(expectedError);
     });
   });
 
   describe('deleteRoom', () => {
     it('deve deletar uma sala com sucesso', async () => {
       const mockResult = {
-        data: null,
+        data: { 
+          id: '1', 
+          name: 'Sala Deletada',
+          size: 10,
+          description: 'Descrição da sala',
+          exclusive: false,
+          status: true
+        },
         error: null
       };
 
       mockRequest.params = { id: '1' };
-      mockHandler.deleteRoomHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.delete.mockResolvedValue(mockResult as any);
 
       await deleteRoom(mockRequest as Request, mockResponse as Response);
 
-      expect(mockHandler.deleteRoomHandler).toHaveBeenCalledWith('1');
+      expect(mockRoomHandler.delete).toHaveBeenCalledWith('1');
       expect(mockJson).toHaveBeenCalledWith({ message: 'Sala deletada com sucesso.' });
     });
 
@@ -274,7 +329,7 @@ describe('Room Controller', () => {
       };
 
       mockRequest.params = { id: '1' };
-      mockHandler.deleteRoomHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.delete.mockResolvedValue(mockResult as any);
 
       await deleteRoom(mockRequest as Request, mockResponse as Response);
 
@@ -285,18 +340,25 @@ describe('Room Controller', () => {
 
   describe('searchRoom', () => {
     it('deve buscar salas por nome', async () => {
-      const mockRooms = [{ id: 1, name: 'Sala de Reunião' }];
+      const mockRooms = [{ 
+        id: '1', 
+        name: 'Sala de Reunião',
+        size: 10,
+        description: 'Descrição da sala',
+        exclusive: false,
+        status: true
+      }];
       const mockResult = {
         data: mockRooms,
         error: null
       };
 
       mockRequest.query = { name: 'Reunião' };
-      mockHandler.searchRoomHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.search.mockResolvedValue(mockResult as any);
 
       await searchRoom(mockRequest as Request, mockResponse as Response);
 
-      expect(mockHandler.searchRoomHandler).toHaveBeenCalledWith('Reunião');
+      expect(mockRoomHandler.search).toHaveBeenCalledWith('Reunião');
       expect(mockJson).toHaveBeenCalledWith(mockRooms);
     });
 
@@ -307,7 +369,7 @@ describe('Room Controller', () => {
       };
 
       mockRequest.query = { name: 'Inexistente' };
-      mockHandler.searchRoomHandler.mockResolvedValue(mockResult);
+      mockRoomHandler.search.mockResolvedValue(mockResult as any);
 
       await searchRoom(mockRequest as Request, mockResponse as Response);
 

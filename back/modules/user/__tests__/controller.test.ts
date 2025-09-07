@@ -1,8 +1,21 @@
 import { Request, Response } from 'express';
 import * as userController from '../controller';
-import * as userHandler from '../handler';
+import { UserHandler } from '../handler';
 
-const mockHandler = userHandler as jest.Mocked<typeof userHandler>;
+// Mock do UserHandler
+jest.mock('../handler', () => ({
+  UserHandler: {
+    single: jest.fn(),
+    list: jest.fn(),
+    delete: jest.fn(),
+    update: jest.fn(),
+    create: jest.fn(),
+    resetUserPassword: jest.fn(),
+    listUsersScale: jest.fn()
+  }
+}));
+
+const mockHandler = UserHandler as jest.Mocked<typeof UserHandler>;
 
 // Mock do dayjs
 jest.mock('dayjs', () => {
@@ -40,35 +53,34 @@ describe('User Controller', () => {
     jest.clearAllMocks();
   });
 
-  describe('showUser', () => {
+  describe('singleUser', () => {
     it('deve retornar usuário quando encontrado', async () => {
       const mockUser = {
         id: '1',
         name: 'João',
         phone: '123456789',
-        role: 'user',
-        user_id: 'user1',
+        role: 'USER',
         email: 'user1@test.com',
         total_bookings: 0
       };
       
       mockReq.params = { id: '1' };
-      mockHandler.showUserHandler.mockResolvedValue({ data: mockUser });
+      mockHandler.single.mockResolvedValue({ data: mockUser });
 
-      await userController.showUser(mockReq as Request, mockRes as Response);
+      await userController.singleUser(mockReq as Request, mockRes as Response);
 
-      expect(mockHandler.showUserHandler).toHaveBeenCalledWith('1');
+      expect(mockHandler.single).toHaveBeenCalledWith('1');
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(mockUser);
     });
 
     it('deve retornar erro 404 quando usuário não encontrado', async () => {
       mockReq.params = { id: '999' };
-      mockHandler.showUserHandler.mockResolvedValue({ error: 'Usuário não encontrado' });
+      mockHandler.single.mockResolvedValue({ error: 'Usuário não encontrado' });
 
-      await userController.showUser(mockReq as Request, mockRes as Response);
+      await userController.singleUser(mockReq as Request, mockRes as Response);
 
-      expect(mockHandler.showUserHandler).toHaveBeenCalledWith('999');
+      expect(mockHandler.single).toHaveBeenCalledWith('999');
       expect(mockStatus).toHaveBeenCalledWith(404);
       expect(mockJson).toHaveBeenCalledWith({ message: 'Usuário não encontrado' });
     });
@@ -77,7 +89,7 @@ describe('User Controller', () => {
   describe('listUsers', () => {
     it('deve retornar lista de usuários com paginação padrão', async () => {
       const mockUsers = {
-        data: [{ id: '1', name: 'João', phone: '123456789', role: 'user', user_id: 'user1', email: 'user1@test.com' }],
+        data: [{ id: '1', name: 'João', phone: '123456789', role: 'USER', email: 'user1@test.com' }],
         total: 1,
         page: 1,
         totalPages: 1,
@@ -85,18 +97,18 @@ describe('User Controller', () => {
         hasPrev: false
       };
       
-      mockHandler.listUsersHandler.mockResolvedValue({ data: mockUsers });
+      mockHandler.list.mockResolvedValue({ data: mockUsers });
 
       await userController.listUsers(mockReq as Request, mockRes as Response);
 
-      expect(mockHandler.listUsersHandler).toHaveBeenCalledWith(1, 10);
+      expect(mockHandler.list).toHaveBeenCalledWith(1, 10);
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(mockUsers);
     });
 
     it('deve retornar lista de usuários com paginação customizada', async () => {
       const mockUsers = {
-        data: [{ id: '1', name: 'João', phone: '123456789', role: 'user', user_id: 'user1', email: 'user1@test.com' }],
+        data: [{ id: '1', name: 'João', phone: '123456789', role: 'USER', email: 'user1@test.com' }],
         total: 1,
         page: 2,
         totalPages: 1,
@@ -105,17 +117,17 @@ describe('User Controller', () => {
       };
       
       mockReq.query = { page: '2', limit: '5' };
-      mockHandler.listUsersHandler.mockResolvedValue({ data: mockUsers });
+      mockHandler.list.mockResolvedValue({ data: mockUsers });
 
       await userController.listUsers(mockReq as Request, mockRes as Response);
 
-      expect(mockHandler.listUsersHandler).toHaveBeenCalledWith(2, 5);
+      expect(mockHandler.list).toHaveBeenCalledWith(2, 5);
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(mockUsers);
     });
 
     it('deve retornar erro 500 quando handler falha', async () => {
-      mockHandler.listUsersHandler.mockResolvedValue({ error: 'Erro ao buscar usuários.' });
+      mockHandler.list.mockResolvedValue({ error: 'Erro ao buscar usuários.' });
 
       await userController.listUsers(mockReq as Request, mockRes as Response);
 
@@ -127,12 +139,12 @@ describe('User Controller', () => {
   describe('deleteUser', () => {
     it('deve deletar usuário com sucesso', async () => {
       mockReq.params = { id: 'user-123' };
-      mockHandler.deleteUserHandler.mockResolvedValue({ data: null });
+      mockHandler.delete.mockResolvedValue({ data: null });
 
       await userController.deleteUser(mockReq as Request, mockRes as Response);
 
-      expect(mockHandler.deleteUserHandler).toHaveBeenCalledWith('user-123');
-      expect(mockJson).toHaveBeenCalledWith({ message: 'Usuário e perfil excluídos com sucesso.' });
+      expect(mockHandler.delete).toHaveBeenCalledWith('user-123');
+      expect(mockJson).toHaveBeenCalledWith({ message: 'Usuário, perfil e reservas excluídos com sucesso.' });
     });
 
     it('deve retornar erro 400 quando ID não fornecido', async () => {
@@ -142,12 +154,12 @@ describe('User Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({ error: 'ID do usuário não encontrado.' });
-      expect(mockHandler.deleteUserHandler).not.toHaveBeenCalled();
+      expect(mockHandler.delete).not.toHaveBeenCalled();
     });
 
     it('deve retornar erro 400 quando handler falha', async () => {
       mockReq.params = { id: 'user-123' };
-      mockHandler.deleteUserHandler.mockResolvedValue({ error: 'Erro ao deletar usuário' });
+      mockHandler.delete.mockResolvedValue({ error: 'Erro ao deletar usuário' });
 
       await userController.deleteUser(mockReq as Request, mockRes as Response);
 
@@ -162,8 +174,7 @@ describe('User Controller', () => {
         id: '1',
         name: 'João Silva Atualizado',
         phone: '11888888888',
-        role: 'admin',
-        user_id: 'user-123',
+        role: 'ADMIN',
         email: 'joao.novo@email.com'
       };
       
@@ -175,11 +186,11 @@ describe('User Controller', () => {
         role: 'admin'
       };
       
-      mockHandler.updateUserHandler.mockResolvedValue({ data: updatedUser });
+      mockHandler.update.mockResolvedValue({ data: updatedUser });
 
       await userController.updateUser(mockReq as Request, mockRes as Response);
 
-      expect(mockHandler.updateUserHandler).toHaveBeenCalledWith({
+      expect(mockHandler.update).toHaveBeenCalledWith({
         userId: 'user-123',
         name: 'João Silva Atualizado',
         phone: '11888888888',
@@ -200,13 +211,13 @@ describe('User Controller', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({ error: 'ID do usuário não encontrado.' });
-      expect(mockHandler.updateUserHandler).not.toHaveBeenCalled();
+      expect(mockHandler.update).not.toHaveBeenCalled();
     });
 
     it('deve retornar erro 400 quando handler falha', async () => {
       mockReq.params = { id: 'user-123' };
       mockReq.body = { name: 'João' };
-      mockHandler.updateUserHandler.mockResolvedValue({ error: 'Usuário não encontrado.' });
+      mockHandler.update.mockResolvedValue({ error: 'Usuário não encontrado.' });
 
       await userController.updateUser(mockReq as Request, mockRes as Response);
 
@@ -221,8 +232,7 @@ describe('User Controller', () => {
         id: '1',
         name: 'João Silva',
         phone: '11999999999',
-        role: 'user',
-        user_id: 'user-123',
+        role: 'USER',
         email: 'joao@email.com'
       };
       
@@ -234,11 +244,11 @@ describe('User Controller', () => {
         role: 'user'
       };
       
-      mockHandler.createUserHandler.mockResolvedValue({ data: newUser });
+      mockHandler.create.mockResolvedValue({ data: newUser });
 
       await userController.createUser(mockReq as Request, mockRes as Response);
 
-      expect(mockHandler.createUserHandler).toHaveBeenCalledWith({
+      expect(mockHandler.create).toHaveBeenCalledWith({
         name: 'João Silva',
         phone: '11999999999',
         email: 'joao@email.com',
@@ -261,8 +271,15 @@ describe('User Controller', () => {
       await userController.createUser(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({ error: 'Telefone é obrigatório.' });
-      expect(mockHandler.createUserHandler).not.toHaveBeenCalled();
+      expect(mockJson).toHaveBeenCalledWith({
+        error: 'Dados inválidos',
+        details: [
+          { field: 'phone', message: 'Required' },
+          { field: 'email', message: 'Required' },
+          { field: 'password', message: 'Required' }
+        ]
+      });
+      expect(mockHandler.create).not.toHaveBeenCalled();
     });
 
     it('deve retornar erro 400 quando handler falha', async () => {
@@ -273,7 +290,7 @@ describe('User Controller', () => {
         password: 'senha123'
       };
       
-      mockHandler.createUserHandler.mockResolvedValue({ error: 'Erro ao criar usuário.' });
+      mockHandler.create.mockResolvedValue({ error: 'Erro ao criar usuário.' });
 
       await userController.createUser(mockReq as Request, mockRes as Response);
 
@@ -285,21 +302,21 @@ describe('User Controller', () => {
   describe('listUsersScale', () => {
     it('deve retornar lista de usuários para escala', async () => {
       const mockUsers = [
-        { id: '1', name: 'João', phone: '123456789', role: 'user', user_id: 'user1', email: 'user1@test.com' },
-        { id: '2', name: 'Maria', phone: '987654321', role: 'admin', user_id: 'user2', email: 'user2@test.com' }
+        { id: '1', name: 'João', phone: '123456789', role: 'USER', email: 'user1@test.com' },
+        { id: '2', name: 'Maria', phone: '987654321', role: 'ADMIN', email: 'user2@test.com' }
       ];
       
-      mockHandler.listUsersScaleHandler.mockResolvedValue({ data: mockUsers });
+      mockHandler.listUsersScale.mockResolvedValue({ data: mockUsers });
 
       await userController.listUsersScale(mockReq as Request, mockRes as Response);
 
-      expect(mockHandler.listUsersScaleHandler).toHaveBeenCalled();
+      expect(mockHandler.listUsersScale).toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(mockUsers);
     });
 
     it('deve retornar erro 400 quando handler falha', async () => {
-      mockHandler.listUsersScaleHandler.mockResolvedValue({ error: 'Erro ao buscar usuários.' });
+      mockHandler.listUsersScale.mockResolvedValue({ error: 'Erro ao buscar usuários.' });
 
       await userController.listUsersScale(mockReq as Request, mockRes as Response);
 

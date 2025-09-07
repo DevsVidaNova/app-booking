@@ -14,8 +14,8 @@ import {
   Card,
   CardContent,
 } from '@/components/ui'
-import { RoomsService } from '@/services/rooms.service'
-import { useBookingState } from '@/hooks/use-booking-state'
+import { listRooms } from '@/services/rooms.service'
+import { useBookingFilters } from '@/hooks/use-booking-state'
 
 interface BookingFiltersProps {
   onFiltersChange?: (filters: any) => void
@@ -23,9 +23,12 @@ interface BookingFiltersProps {
 }
 
 export function BookingFilters({ onFiltersChange, className = '' }: BookingFiltersProps) {
-  const { filters, updateFilter, clearFilters, hasActiveFilters } = useBookingState()
+  const { filters, updateFilter, clearFilters, hasActiveFilters } = useBookingFilters()
   
-  const { data: rooms, isLoading: roomsLoading } = RoomsService.useList(1)
+  const { data: rooms, isLoading: roomsLoading } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: listRooms,
+  })
 
   // Notifica mudanças nos filtros
   React.useEffect(() => {
@@ -87,7 +90,7 @@ export function BookingFilters({ onFiltersChange, className = '' }: BookingFilte
                   Carregando...
                 </SelectItem>
               ) : (
-                rooms?.data?.map((room) => (
+                rooms?.map((room) => (
                   <SelectItem key={room.id} value={room.id.toString()}>
                     {room.name}
                   </SelectItem>
@@ -152,7 +155,7 @@ export function BookingFilters({ onFiltersChange, className = '' }: BookingFilte
               )}
               {filters.roomId && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                  Sala: {rooms?.data?.find(r => r.id.toString() === filters.roomId)?.name}
+                  Sala: {rooms?.find(r => r.id.toString() === filters.roomId)?.name}
                   <button
                     onClick={() => updateFilter('roomId', '')}
                     className="hover:bg-green-200 rounded-full p-0.5"

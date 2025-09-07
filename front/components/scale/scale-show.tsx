@@ -14,20 +14,15 @@ import {
   Message,
 } from "@/components/ui";
 
-import { useQuery } from "@tanstack/react-query";
-
 import { Check } from "lucide-react";
 
 import { SingleScale } from "@/types";
-import { singleScale } from "@/services/scale.service";
+import { ScaleService } from "@/services/scale.service";
 
 export function ScaleShow({ id }: { id: string }) {
   const {
     data: scale
-  } = useQuery<SingleScale>({
-    queryKey: ["single scale", id],
-    queryFn: () => singleScale(id),
-  });
+  } = ScaleService.useSingle(id);
 
   const [success, setsuccess] = useState("");
   const [error, seterror] = useState("");

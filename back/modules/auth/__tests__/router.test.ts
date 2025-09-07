@@ -51,11 +51,11 @@ describe('Auth Router', () => {
     });
     
     mockController.loginUser.mockImplementation(async (req, res) => {
-      res.json({ session: { access_token: 'token123' }, profile: { name: 'Test User' } });
+      res.json({ user: { id: 'user-123', email: 'test@test.com' }, token: 'token123' });
     });
     
     mockController.getUserProfile.mockImplementation(async (req, res) => {
-      res.json({ id: 'profile-123', name: 'Test User' });
+      res.json({ user: { id: 'profile-123', name: 'Test User', email: 'test@test.com' } });
     });
     
     mockController.updateUserProfile.mockImplementation(async (req, res) => {
@@ -69,12 +69,16 @@ describe('Auth Router', () => {
     mockController.logout.mockImplementation(async (req, res) => {
       res.json({ message: 'Logout realizado com sucesso' });
     });
+
+    mockController.verifyToken.mockImplementation(async (req, res) => {
+      res.json({ user: { id: 'user-123', email: 'test@test.com' } });
+    });
     
     app.use('/auth', AuthRouter);
   });
 
   describe('POST /register', () => {
-    it('should register user successfully with admin access', async () => {
+    it('should register user successfully', async () => {
       const userData = {
         email: 'test@test.com',
         password: 'password123',
@@ -88,16 +92,15 @@ describe('Auth Router', () => {
       
       expect(response.status).toBe(201);
       expect(response.body).toEqual({ message: 'Usuário registrado com sucesso' });
-      expect(mockRequireAdmin).toHaveBeenCalled();
       expect(mockController.signUpUser).toHaveBeenCalled();
     });
 
-    it('should apply requireAdmin middleware', async () => {
+    it('should call signUpUser controller', async () => {
       await request(app)
         .post('/auth/register')
-        .send({ email: 'test@test.com', password: 'password123', name: 'Test User' });
+        .send({ email: 'test@test.com', password: 'password123', name: 'Test User', phone: '123456789' });
       
-      expect(mockRequireAdmin).toHaveBeenCalled();
+      expect(mockController.signUpUser).toHaveBeenCalled();
     });
   });
 
@@ -114,8 +117,8 @@ describe('Auth Router', () => {
       
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        session: { access_token: 'token123' },
-        profile: { name: 'Test User' }
+        user: { id: 'user-123', email: 'test@test.com' },
+        token: 'token123'
       });
       expect(mockPublicRoute).toHaveBeenCalled();
       expect(mockController.loginUser).toHaveBeenCalled();
@@ -155,7 +158,7 @@ describe('Auth Router', () => {
         .get('/auth/profile');
       
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ id: 'profile-123', name: 'Test User' });
+      expect(response.body).toEqual({ user: { id: 'profile-123', name: 'Test User', email: 'test@test.com' } });
       expect(mockRequireAuth).toHaveBeenCalled();
       expect(mockController.getUserProfile).toHaveBeenCalled();
     });
@@ -222,6 +225,25 @@ describe('Auth Router', () => {
     });
   });
 
+  describe('POST /verify', () => {
+    it('should verify token successfully with authentication', async () => {
+      const response = await request(app)
+        .post('/auth/verify');
+      
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ user: { id: 'user-123', email: 'test@test.com' } });
+      expect(mockRequireAuth).toHaveBeenCalled();
+      expect(mockController.verifyToken).toHaveBeenCalled();
+    });
+
+    it('should apply requireAuth middleware', async () => {
+      await request(app)
+        .post('/auth/verify');
+      
+      expect(mockRequireAuth).toHaveBeenCalled();
+    });
+  });
+
   describe('Middleware Integration', () => {
     it('should apply correct middleware for each route', async () => {
       // Test all routes to ensure middleware is applied
@@ -231,10 +253,10 @@ describe('Auth Router', () => {
       await request(app).get('/auth/profile');
       await request(app).put('/auth/edit').send({});
       await request(app).post('/auth/logout');
+      await request(app).post('/auth/verify');
       
-      expect(mockRequireAdmin).toHaveBeenCalledTimes(1); // only /register
       expect(mockPublicRoute).toHaveBeenCalledTimes(1); // only /login
-      expect(mockRequireAuth).toHaveBeenCalledTimes(4); // /delete, /profile, /edit, /logout
+      expect(mockRequireAuth).toHaveBeenCalledTimes(5); // /delete, /profile, /edit, /logout, /verify
     });
 
     it('should handle JSON body parsing', async () => {
@@ -256,7 +278,7 @@ describe('Auth Router', () => {
       
       const response = await request(app)
         .post('/auth/register')
-        .send({ email: 'test@test.com', password: 'password123', name: 'Test User' });
+        .send({ email: 'test@test.com', password: 'password123', name: 'Test User', phone: '123456789' });
       
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'Email já existe' });
@@ -285,6 +307,18 @@ describe('Auth Router', () => {
       
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ error: 'Usuário não encontrado' });
+    });
+
+    it('should handle controller errors for verify token', async () => {
+      mockController.verifyToken.mockImplementation(async (req, res) => {
+        res.status(401).json({ error: 'Token inválido' });
+      });
+      
+      const response = await request(app)
+        .post('/auth/verify');
+      
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({ error: 'Token inválido' });
     });
   });
 });

@@ -17,7 +17,6 @@ export async function getStats(req: any, res: any) {
     }
     res.status(200).json(result.data);
   } catch (error) {
-    console.error("Erro ao buscar estatísticas:", error);
     res.status(500).json({ message: "Erro ao obter estatísticas." });
   }
 }

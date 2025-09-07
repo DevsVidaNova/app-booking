@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { User } from "@/types";
 import { KeyRound, Trash, ArrowLeft, User as UserIcon, Mail, Phone, Shield } from "lucide-react";
-import { excludeUserById, showUserById, resetUserPassword } from "@/services/user.service";
+import { UserService } from "@/services/user.service";
 import { UserEditForm } from "@/components/user/user-edit";
 import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
@@ -18,7 +18,7 @@ export default function UserDetails() {
   const { data: user, error, isLoading, refetch } = useQuery<User>({
     queryKey: [`user-${userId}`],
     queryFn: async () => {
-      return await showUserById(userId);
+      return await UserService.single(userId);
     },
     enabled: !!userId
   });
@@ -61,7 +61,7 @@ const UserDetailsContent = ({ user, refetch, onBack }: { user: User; refetch: ()
       return;
     }
     try {
-      await excludeUserById(id);
+      await UserService.delete(id);
       toast.success("Usuário excluído com sucesso");
       router.push('/dashboard/users');
     } catch (error: any) {
@@ -72,7 +72,7 @@ const UserDetailsContent = ({ user, refetch, onBack }: { user: User; refetch: ()
 
   const handleResetPassword = async (id: string) => {
     try {
-      await resetUserPassword(id);
+      await UserService.resetPassword(id);
       toast.success("Senha resetada com sucesso", {
         description: "A senha do usuário foi resetada com sucesso",
         action: {
@@ -161,7 +161,7 @@ const UserDetailsContent = ({ user, refetch, onBack }: { user: User; refetch: ()
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Ações</h3>
         <div className="flex gap-3 flex-wrap">
-          <UserEditForm id={user.user_id} refetch={refetch} defaultValue={user} />
+          <UserEditForm id={user.user_id} defaultValue={user} />
           
           <Button 
             variant="outline" 

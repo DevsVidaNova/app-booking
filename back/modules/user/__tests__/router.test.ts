@@ -72,7 +72,7 @@ describe('User Router', () => {
       res.status(200).json([]);
     });
     
-    mockController.showUser.mockImplementation(async (req: Request, res: Response) => {
+    mockController.singleUser.mockImplementation(async (req: Request, res: Response) => {
       res.status(200).json({ id: req.params.id });
     });
     
@@ -249,7 +249,7 @@ describe('User Router', () => {
         email: 'joao@email.com'
       };
       
-      mockController.showUser.mockImplementation(async (req: Request, res: Response) => {
+      mockController.singleUser.mockImplementation(async (req: Request, res: Response) => {
         res.status(200).json(mockUser);
       });
 
@@ -260,11 +260,11 @@ describe('User Router', () => {
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockUser);
       expect(mockRequireAdmin).toHaveBeenCalled();
-      expect(mockController.showUser).toHaveBeenCalled();
+      expect(mockController.singleUser).toHaveBeenCalled();
     });
 
     it('deve retornar 404 quando usuário não encontrado', async () => {
-      mockController.showUser.mockImplementation(async (req: Request, res: Response) => {
+      mockController.singleUser.mockImplementation(async (req: Request, res: Response) => {
         res.status(404).json({ message: 'Usuário não encontrado' });
       });
 
@@ -281,7 +281,7 @@ describe('User Router', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.error).toBe('Token não fornecido');
-      expect(mockController.showUser).not.toHaveBeenCalled();
+      expect(mockController.singleUser).not.toHaveBeenCalled();
     });
   });
 
@@ -444,7 +444,7 @@ describe('User Router', () => {
     it('deve capturar parâmetros de rota corretamente', async () => {
       const userId = 'user-123';
 
-      mockController.showUser.mockImplementation(async (req: Request, res: Response) => {
+      mockController.singleUser.mockImplementation(async (req: Request, res: Response) => {
         expect(req.params.id).toBe(userId);
         res.status(200).json({ id: userId });
       });

@@ -22,7 +22,6 @@ export const createBooking = async (req: Request, res: Response, _next: NextFunc
       return;
     }
 
-    console.error('Erro ao criar reserva:', error);
     res.status(500).json({ error: 'Erro interno do servidor ao criar reserva.' });
   }
 };
