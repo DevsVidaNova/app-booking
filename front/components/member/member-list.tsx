@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react';
 import { EllipsisVertical, Trash } from 'lucide-react';
 import { ListMember, SingleMember } from '@/types';
 import { MemberAddForm } from './member-add';
@@ -22,7 +23,25 @@ import { MemberEditForm } from './member-edit';
 import { toast } from 'sonner';
 
 
-export function MemberList({ users, refetch, setpage, page }: { readonly users: ListMember, readonly refetch: () => void, readonly page: number, readonly setpage: (page: number) => void; }) {
+export function MemberList() {
+  const [page, setPage] = useState(1);
+
+  const { data, error, isLoading, refetch } = MembersService.useList(page);
+
+  if (isLoading)
+    return (
+      <div className="flex flex-col w-full px-4 py-4 container">
+        <p>Carregando...</p>
+      </div>
+    );
+  if (error)
+    return (
+      <div className="flex flex-col w-full px-4 py-4 container">
+        <p>Erro ao carregar membros</p>
+      </div>
+    );
+
+  if (!data) return null;
   return (
     <>
       <div className=' flex flex-col  gap-4'>
@@ -33,8 +52,8 @@ export function MemberList({ users, refetch, setpage, page }: { readonly users: 
           </div>
         </div>
         <div className='mb-10'>
-          {users && <TableMembers users={users} refetch={refetch} />}
-          <Pagination page={page} setpage={setpage} data={users.data} hideText={false} />
+          <TableMembers users={data} refetch={refetch} />
+          <Pagination page={page} setpage={setPage} data={data.data} hideText={false} />
         </div>
       </div>
       <div style={{ position: 'fixed', bottom: 50, left: '50%', transform: 'translateX(-50%)' }} className='justify-center items-center md:hidden'>

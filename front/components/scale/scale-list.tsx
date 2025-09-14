@@ -1,4 +1,6 @@
 'use client'
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, EllipsisVertical, Trash } from 'lucide-react';
 
 import {
@@ -19,12 +21,37 @@ import {
   PaginationLink,
 } from "@/components/ui/";
 
-import { SingleScale } from '@/types';
+import { SingleScale, Pagination as PaginationType } from '@/types';
 import { ScaleAdd } from './scale-add';
 import { ScaleEdit } from './scale-edit';
 import { ScaleService } from '@/services/scale.service';
 
-export function ScaleList({ data, refetch, handleNext, handlePrevious, page }: { data: SingleScale[], refetch: () => void, handleNext: () => void, handlePrevious: () => void, page: number }) {
+export function ScaleList() {
+  const [page, setPage] = useState(1);
+
+  const { data, error, isLoading, refetch } = useQuery<{ scales: SingleScale[]; pagination: PaginationType }>({
+    queryKey: ['scales', page],
+    queryFn: () => ScaleService.list(page),
+  });
+
+  const deleteScaleMutation = ScaleService.useDelete();
+
+  const handleNext = () => {
+    if (data && data.pagination && data.pagination.page < data.pagination.totalPages) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (data && data.pagination && data?.pagination.page > 1) {
+      setPage((prev) => prev - 1);
+    }
+  };
+
+  if (isLoading) return <div className="flex flex-col w-full px-4 py-4 container"><p>Carregando...</p></div>
+  if (error) return <div className="flex flex-col w-full px-4 py-4 container"><p>Erro ao carregar escalas</p></div>
+
+  if (!data) return null;
   return (
     <>
       <div className='flex flex-col gap-4'>
@@ -35,7 +62,7 @@ export function ScaleList({ data, refetch, handleNext, handlePrevious, page }: {
           </div>
         </div>
         <div>
-          <TableList handleNext={handleNext} handlePrevious={handlePrevious} page={page} data={data || []} refetch={refetch} />
+          <TableList handleNext={handleNext} handlePrevious={handlePrevious} page={page} data={data.scales || []} refetch={refetch} deleteScaleMutation={deleteScaleMutation} />
         </div>
       </div>
       <div style={{ position: 'fixed', bottom: 50, left: '50%', transform: 'translateX(-50%)' }} className='justify-center items-center md:hidden'>
@@ -45,10 +72,8 @@ export function ScaleList({ data, refetch, handleNext, handlePrevious, page }: {
   )
 }
 
-const TableList = ({ data, refetch, handleNext, handlePrevious, page }: { data: SingleScale[], refetch: () => void, handleNext: () => void, handlePrevious: () => void, page: number }) => {
+const TableList = ({ data, refetch, handleNext, handlePrevious, page, deleteScaleMutation }: { data: SingleScale[], refetch: () => void, handleNext: () => void, handlePrevious: () => void, page: number, deleteScaleMutation: any }) => {
   if (!data) return <p>Carregando...</p>
-
-  const deleteScaleMutation = ScaleService.useDelete();
 
   const handleExclude = async (id: string) => {
     try {

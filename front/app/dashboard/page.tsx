@@ -15,7 +15,7 @@ export default function Dashboard() {
     queryFn: AnalyticsService.analytics
   });
 
-  const { rooms, bookings, users, week, members } = data || {};
+  const { rooms, bookings, users, members } = data || {};
 
   if (isLoading) return <p>Carregando...</p>;
   if (error) return <p>Erro ao carregar usuários</p>;

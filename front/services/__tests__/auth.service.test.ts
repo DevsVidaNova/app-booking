@@ -159,7 +159,7 @@ describe('AuthService', () => {
 
       const result = await AuthService.sigle(userId)
 
-      expect(mockFetchWithAuth).toHaveBeenCalledWith(`/users/${userId}`, { method: 'GET' })
+      expect(mockFetchWithAuth).toHaveBeenCalledWith(`/user/${userId}`, { method: 'GET' })
       expect(result).toEqual(mockUser)
     })
 

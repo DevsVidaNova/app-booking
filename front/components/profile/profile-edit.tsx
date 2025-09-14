@@ -5,18 +5,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { User, Save, X } from "lucide-react";
-
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, Button, Input } from "@/components/ui";
 import { AuthService } from "@/services/auth.service";
 import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: "O nome deve ter pelo menos 2 palavras.",
+    message: "O nome deve ter pelo menos 2 palavras."
   }),
   phone: z.string().regex(/^\(\d{2}\) \d{5}-\d{4}$/, {
-    message: "Informe um número de celular válido com DDD e 11 dígitos.",
-  }),
+    message: "Informe um número de celular válido com DDD e 11 dígitos."
+  })
 });
 
 export function ProfileEdit() {
@@ -27,8 +26,8 @@ export function ProfileEdit() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      phone: "",
-    },
+      phone: ""
+    }
   });
 
   useEffect(() => {
@@ -47,7 +46,7 @@ export function ProfileEdit() {
     try {
       await updateMutation.mutateAsync({
         id: user.id,
-        data: values,
+        data: values
       });
       toast.success("Perfil atualizado com sucesso!");
     } catch (error: any) {
@@ -103,7 +102,7 @@ export function ProfileEdit() {
       <div className="w-32 h-32 items-center justify-center bg-[#303030] flex flex-col rounded-full mx-auto mb-6">
         <User size={52} color="#fff" />
       </div>
-      
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -119,7 +118,7 @@ export function ProfileEdit() {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="phone"
@@ -130,7 +129,7 @@ export function ProfileEdit() {
                   <Input
                     placeholder="(47) 99123-4567"
                     {...field}
-                    onChange={(e) => {
+                    onChange={e => {
                       const value = e.target.value
                         .replace(/\D/g, "")
                         .replace(/^(\d{2})(\d)/g, "($1) $2")
@@ -144,12 +143,8 @@ export function ProfileEdit() {
               </FormItem>
             )}
           />
-          
-          <Button 
-            type="submit" 
-            disabled={updateMutation.isPending}
-            className="w-full"
-          >
+
+          <Button type="submit" disabled={updateMutation.isPending} className="w-full">
             <Save className="h-4 w-4 mr-2" />
             {updateMutation.isPending ? "Salvando..." : "Salvar alterações"}
           </Button>

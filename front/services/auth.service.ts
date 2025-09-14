@@ -38,7 +38,7 @@ export const AuthService = {
     },
     sigle: async (id: string): Promise<ListUser> => {
         try {
-            const res = await fetchWithAuth<ListUser>("/users/" + id, { method: "GET" });
+            const res = await fetchWithAuth<ListUser>("/user/" + id, { method: "GET" });
             return res;
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'An unknown error occurred');
